@@ -2181,7 +2181,7 @@ MonoBehaviour:
   onDrop:
     m_PersistentCalls:
       m_Calls: []
-  updateAttach:
+  updateAttachNotImplemented:
     m_PersistentCalls:
       m_Calls: []
   hand: {fileID: 0}
@@ -2870,7 +2870,7 @@ MonoBehaviour:
   onDrop:
     m_PersistentCalls:
       m_Calls: []
-  updateAttach:
+  updateAttachNotImplemented:
     m_PersistentCalls:
       m_Calls: []
   hand: {fileID: 0}
@@ -3464,7 +3464,7 @@ MonoBehaviour:
   onDrop:
     m_PersistentCalls:
       m_Calls: []
-  updateAttach:
+  updateAttachNotImplemented:
     m_PersistentCalls:
       m_Calls: []
   hand: {fileID: 0}
@@ -4557,7 +4557,7 @@ MonoBehaviour:
   onDrop:
     m_PersistentCalls:
       m_Calls: []
-  updateAttach:
+  updateAttachNotImplemented:
     m_PersistentCalls:
       m_Calls: []
   hand: {fileID: 0}
@@ -4838,6 +4838,7 @@ GameObject:
   - component: {fileID: 431040227326239107}
   - component: {fileID: 431040227326239105}
   - component: {fileID: 431040227326239104}
+  - component: {fileID: 431040227326239108}
   m_Layer: 9
   m_Name: LongSword
   m_TagString: Untagged
@@ -5015,7 +5016,7 @@ MonoBehaviour:
   onDrop:
     m_PersistentCalls:
       m_Calls: []
-  updateAttach:
+  updateAttachNotImplemented:
     m_PersistentCalls:
       m_Calls: []
   hand: {fileID: 0}
@@ -5079,6 +5080,47 @@ MonoBehaviour:
   inertiaTensorMultiplier: 1
   regulateInertiaTensor: 1
   minRegulatedInertiaTensorComponent: 0.1
+--- !u!114 &431040227326239108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 431040227326239101}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b679e707ea35048fbb4d8c19a2f37ac3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sampleMode: 1
+  showPosition: 0
+  showPosition_x: 1
+  showPosition_y: 1
+  showPosition_z: 1
+  positionMode: 2
+  positionMin: Infinity
+  positionMax: -Infinity
+  showRotation: 0
+  showRotation_x: 1
+  showRotation_y: 1
+  showRotation_z: 1
+  rotationMode: 0
+  rotationMin: 0
+  rotationMax: 360
+  showVelocity: 1
+  showVelocity_x: 1
+  showVelocity_y: 1
+  showVelocity_z: 1
+  velocityMode: 2
+  velocityMin: Infinity
+  velocityMax: -Infinity
+  showAngularVelocity: 0
+  showAngularVelocity_x: 1
+  showAngularVelocity_y: 1
+  showAngularVelocity_z: 1
+  angularVelocityMode: 2
+  angularVelocityMin: Infinity
+  angularVelocityMax: -Infinity
 --- !u!4 &652928379106912223
 Transform:
   m_ObjectHideFlags: 0
@@ -5193,6 +5235,18 @@ PrefabInstance:
     - target: {fileID: 7161284205206757731, guid: 45ee759b2d54fa24098bc5e18ae4a375, type: 3}
       propertyPath: m_RootOrder
       value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7161284205206757731, guid: 45ee759b2d54fa24098bc5e18ae4a375, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7161284205206757731, guid: 45ee759b2d54fa24098bc5e18ae4a375, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7161284205206757731, guid: 45ee759b2d54fa24098bc5e18ae4a375, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7161284205206757731, guid: 45ee759b2d54fa24098bc5e18ae4a375, type: 3}
       propertyPath: m_LocalPosition.x

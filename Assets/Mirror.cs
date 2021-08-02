@@ -64,7 +64,7 @@ namespace fzmnm
         private void OnPreRender()
         {
             tmpInvertCulling = GL.invertCulling;
-            GL.invertCulling = true;
+            GL.invertCulling = !GL.invertCulling;
         }
         private void OnPostRender()
         {

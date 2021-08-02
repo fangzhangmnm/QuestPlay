@@ -3,6 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+
+/*
+ * TODO
+ * isPickedUp, which hand, which hand's input events
+ * 
+ * 
+ */
 namespace fzmnm.XRPlayer
 {
     [DefaultExecutionOrder(-1)]
@@ -24,8 +31,7 @@ namespace fzmnm.XRPlayer
         public bool breakWhenLostTrack = false;
 
         public UnityEvent onPickUp, onDrop;
-        [System.Serializable] public class UpdateTransform : UnityEvent<Transform> { }
-        public UpdateTransform updateAttach = new UpdateTransform();
+        public UnityEvent<Transform> updateAttachNotImplemented = new UnityEvent<Transform>();
 
         Rigidbody body;
         [HideInInspector] public XRHand hand, hand2;
@@ -92,7 +98,7 @@ namespace fzmnm.XRPlayer
                 attachedPositionLS = transform.InverseTransformPoint(attachPositionWS);
                 attachedRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
                 ResetMovement();
-                updateAttach.Invoke(emptyHand.playerRoot);
+                updateAttachNotImplemented.Invoke(emptyHand.playerRoot);
                 onPickUp.Invoke();
             }
             else
@@ -167,7 +173,7 @@ namespace fzmnm.XRPlayer
             body.velocity = smoothedThorwVelocity;
             body.angularVelocity = smoothedThrowAngularVelocity;
             onDrop.Invoke();
-            updateAttach.Invoke(null);
+            updateAttachNotImplemented.Invoke(null);
         }
         /*
         public override (Vector3, Quaternion) GetAttachPosition(XRHand hand)

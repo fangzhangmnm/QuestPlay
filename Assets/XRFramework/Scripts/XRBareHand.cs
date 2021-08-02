@@ -28,7 +28,6 @@ namespace fzmnm.XRPlayer
 
         private void FixedUpdate()
         {
-
             //TODO unify the data source of scale
             bool handLostTrack = Vector3.Distance(body.transform.position, hand.trackedPosition) > lostTrackDist * scale;
             if (handLostTrack)
