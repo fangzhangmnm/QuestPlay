@@ -1,0 +1,33 @@
+
+
+[[[[[features]]]]]
+avatar scaling and fbik
+gravityfield windfield
+剑的摩擦，haptic逻辑重构
+剑打击感，音效
+抓取时手ik
+正反手，pole
+剑戳进去怎么处理。基于物理还是逻辑？
+敌人角色的fbik和擒抱
+擒抱系统
+受力和疲劳度
+max throw kinematic energy
+射箭
+
+
+[[[[[bugs]]]]]
+长柄的投掷问题。重心速度，还有和手的碰撞
+手的碰撞cooldown
+转弯时teleport还会抖一下的问题, joint内部速度？
+
+
+[[[[[done]]]]]
+改变joint连接方式
+locomotion给速度不再自己估算
+椅子上坐起会失去惯性
+转弯时teleport还会抖一下的问题
+
+
+[[[[[ideas]]]]]
+Class CharacterStats:IDamageable
+Class CharacterAnomation:IShootable

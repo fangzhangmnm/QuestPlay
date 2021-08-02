@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 588fc109028db9140b6663e4bfd2873f, type: 3}
+  m_Name: DefaultJointSettings
+  m_EditorClassIdentifier: 
+  spring: 50000
+  damper: 2000
+  maxForce: 1000
+  angularSpring: 50000
+  angularDamper: 2000
+  angularMaxForce: 10000

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: e41529083b96ad5488c5bff1b58c6d4f
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - hoveringEffect: {instanceID: 0}
+  - attachRef: {instanceID: 0}
+  - attach2Ref: {instanceID: 0}
+  - jointSettings: {fileID: 11400000, guid: 3c66d7cd553fe604b914c06333641fab, type: 2}
+  - hand: {instanceID: 0}
+  - hand2: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
