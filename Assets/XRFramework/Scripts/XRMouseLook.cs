@@ -66,7 +66,7 @@ namespace fzmnm.XRPlayer
             locomotion.inputStickR = Vector2.zero;
             if (Keyboard.current.leftArrowKey.isPressed) locomotion.inputStickR += Vector2.left;
             if (Keyboard.current.rightArrowKey.isPressed) locomotion.inputStickR += Vector2.right;
-            if (Keyboard.current.spaceKey.wasPressedThisFrame) locomotion.inputJump = true;
+            locomotion.inputJump.Update(Keyboard.current.spaceKey.isPressed);
         }
     }
 }

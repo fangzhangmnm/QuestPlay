@@ -21,7 +21,7 @@ namespace fzmnm.XRPlayer
         public float rotateSnap = 45f;
         public float rotateSnapTime = .4f;
 
-        [HideInInspector]public UnityEvent<Vector3> onTeleport;
+        [HideInInspector]public UnityEvent<Vector3> onTeleport=new UnityEvent<Vector3>();
 
         Vector3 inertiaVelocity;
         public Vector3 estimatedPlayerRootVelocity { get; private set; }
@@ -64,12 +64,6 @@ namespace fzmnm.XRPlayer
         }
         private void FixedUpdate()
         {
-
-            isFakeMoving = false;
-            stateMachine.UpdateState(Time.fixedDeltaTime);
-            inputJump = false;
-            estimatedPlayerRootVelocity = inertiaVelocity;
-
             // Exercution Order:
             // 0 other scripts last frame, or
             // <-10 other scripts this frame
@@ -85,9 +79,13 @@ namespace fzmnm.XRPlayer
             // -1 XRPickup.fixedUpdate
             //      check hasTeleported, update or reset joint
 
+            GetInput();
+            isFakeMoving = false;
+            stateMachine.UpdateState(Time.fixedDeltaTime);
+            estimatedPlayerRootVelocity = inertiaVelocity;
+
             if (hasTeleported)
                 onTeleport.Invoke(estimatedPlayerRootVelocity);
-
             hasTeleported = false;
 
             debug_Statename = stateMachine.currentState != null ? stateMachine.currentState.name : "";
@@ -102,12 +100,7 @@ namespace fzmnm.XRPlayer
 
 
 
-
-        private void Update()
-        {
-            GetInput();
-        }
-        [HideInInspector] public bool inputJump;bool inputJumpReleased=true;
+        [HideInInspector] public ButtonInput inputJump = new ButtonInput();
         [HideInInspector] public Vector2 inputStickL, inputStickR;
         [HideInInspector] public bool mouseControl = false;
         void GetInput()
@@ -123,17 +116,7 @@ namespace fzmnm.XRPlayer
             if (rightController.isValid)
                 if (rightController.TryGetFeatureValue(UnityEngine.XR.CommonUsages.primary2DAxis, out Vector2 value))
                     inputStickR = value;
-
-            if (inputStickL.magnitude < joystickDeadZone)
-                inputStickL = Vector2.zero;
-            if (inputStickR.y > .5f && inputStickR.y > Mathf.Abs(inputStickR.x))
-            {
-                if (inputJumpReleased)
-                    inputJump = true;
-                inputJumpReleased = false;
-            }
-            else
-                inputJumpReleased = true;
+            inputJump.Update(inputStickR.y > .5f && inputStickR.y > Mathf.Abs(inputStickR.x));
         }
         float rotateCD;
         void DealSnapRotation(float dt)

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: DefaultJointSettings
   m_EditorClassIdentifier: 
   spring: 50000
-  damper: 2000
-  maxForce: 1000
-  angularSpring: 50000
-  angularDamper: 2000
-  angularMaxForce: 10000
+  damper: 1
+  maxForce: Infinity
+  angularSpring: 2000
+  angularDamper: 10
+  angularMaxForce: Infinity

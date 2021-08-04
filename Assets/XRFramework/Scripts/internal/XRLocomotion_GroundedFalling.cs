@@ -29,6 +29,7 @@ namespace fzmnm.XRPlayer
             bool isThisStep = controller.DetectGround(out float groundDist, out RaycastHit groundHit);
 
             Vector3 inputDelta = ProjectHorizontal(head.TransformDirection(new Vector3(inputStickL.x, 0, inputStickL.y))).normalized * inputStickL.magnitude;
+            if (inputStickL.magnitude < joystickDeadZone) inputDelta = Vector3.zero;
             if (inputDelta.magnitude > 0)
                 isFakeMoving = true;
             inputDelta *= speed * dt;
@@ -49,7 +50,7 @@ namespace fzmnm.XRPlayer
             }
             else
             {
-                if (inputJump && stateMachine.currentState.time > .1f)
+                if (inputJump.Consume() && stateMachine.currentState.time > .1f)
                 {
                     inertiaVelocity = (inputDelta + attachedDelta) / dt + up * jumpSpeed;
                     keepInertiaVelocity = true;

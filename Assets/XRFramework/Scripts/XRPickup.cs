@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -12,10 +10,25 @@ using UnityEngine.Events;
  */
 namespace fzmnm.XRPlayer
 {
-    [DefaultExecutionOrder(-1)]
+    [DefaultExecutionOrder(-5)]
     [RequireComponent(typeof(Rigidbody))]
     public class XRPickup : XRInteractable
     {
+
+        #region API
+        public XRHand hand { get; protected set; }
+        public XRHand secondaryHand { get; protected set; }
+        public Vector3 handAttachPositionLS { get; protected set; }
+        public Vector3 secondaryHandAttachPositionLS { get; protected set; }
+        public Quaternion handAttachRotationLS { get; protected set; }
+        public Quaternion secondaryHandAttachRotationLS { get; protected set; }
+        [HideInInspector] public UnityEvent onPickUp, onDrop, onInteractWhenPicked;
+        public bool isPickedUp => hand != null;
+        public void Attach(XRHand hand) => _Attach(hand);
+        public void Drop() => _Drop();
+        #endregion
+
+        #region Configure
         public enum AttachMode { FreeGrab, FreeGrabTwoHanded, Handle, PrimarySecondaryHandle, Pole };
         public bool canSwapHand = true;
         bool hand2Enabled => attachMode == AttachMode.FreeGrabTwoHanded
@@ -24,22 +37,35 @@ namespace fzmnm.XRPlayer
         bool hand2AutoDrop => false;// attachMode == AttachMode.PrimarySecondaryHandle;
         public AttachMode attachMode = AttachMode.FreeGrab;
 
-        public Transform attachRef, attach2Ref;
-        public JointSettings jointSettings;
+        public Transform attachRef, secondaryAttachRef;
+        public JointSettings jointSettingsOverride;
         public float lostTrackDist = .3f;
-        public float throwSmoothTime = .1f;
+        //public float throwSmoothTime = .1f;
         public bool breakWhenLostTrack = false;
+        #endregion
 
-        public UnityEvent onPickUp, onDrop;
-        public UnityEvent<Transform> updateAttachNotImplemented = new UnityEvent<Transform>();
 
         Rigidbody body;
-        [HideInInspector] public XRHand hand, hand2;
-        ConfigurableJoint joint, joint2;
-        Quaternion jointBias, jointBias2;
-        Vector3 attachedPositionLS, attached2PositionLS, desiredPosition;
-        Quaternion attachedRotationLS, attached2RotationLS, desiredRotation;
-        Vector3 smoothedThorwVelocity, smoothedThrowAngularVelocity;
+        ConfigurableJoint joint, secondaryJoint;
+        Quaternion jointBias, secondaryJointBias;
+        const bool jointFlip = true;
+        Vector3 desiredPosition;
+        Quaternion desiredRotation;
+        //Vector3 smoothedThorwVelocity, smoothedThrowAngularVelocity;
+        [HideInInspector] public UnityEvent<Transform> updateAttachNotImplemented = new UnityEvent<Transform>();
+
+        void _Drop()
+        {
+            if (secondaryHand) secondaryHand.DetachIfAny();
+            if (hand) hand.DetachIfAny();
+        }
+        void _Attach(XRHand hand)
+        {
+            if (this.hand == hand || this.secondaryHand == hand) return;
+            if (hand == null) return;
+            hand.DetachIfAny();
+            hand.Attach(this,transform.position,transform.rotation);
+        }
 
         private void Awake()
         {
@@ -50,14 +76,11 @@ namespace fzmnm.XRPlayer
         void OnDisable()
         {
             hand?.DetachIfAny();
-            hand2?.DetachIfAny();
+            secondaryHand?.DetachIfAny();
             onDrop.Invoke();
         }
 
-        public void DetachIfAttached()
-        {
-            if (hand) hand.DetachIfAny();
-        }
+
         public override bool CanInteract(XRHand hand, out int priority)
         {
             return CanAttach(hand, out priority);
@@ -68,7 +91,7 @@ namespace fzmnm.XRPlayer
             if (hand2Enabled && this.hand && isActiveAndEnabled)
             {
                 priority = -1;
-                if (hand2) return false;
+                if (secondaryHand) return false;
                 else return true;
             }
             else
@@ -86,17 +109,24 @@ namespace fzmnm.XRPlayer
             }
         }
 
+        public override void OnInteract(XRHand hand)
+        {
+            onInteractWhenPicked.Invoke();
+        }
+
         public override void OnAttach(XRHand emptyHand, Vector3 attachPositionWS, Quaternion attachRotationWS)
         {
             Debug.Log($"{name}.OnAttach");
-            smoothedThorwVelocity = Vector3.zero;
-            smoothedThrowAngularVelocity = Vector3.zero;
+            //smoothedThorwVelocity = Vector3.zero;//TODO bug
+            //smoothedThrowAngularVelocity = Vector3.zero;
+
+            JointSettings jointSettings = jointSettingsOverride != null ? jointSettingsOverride : emptyHand.jointSettings;
             if (!hand)
             {
                 hand = emptyHand;
-                (joint, jointBias) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings);
-                attachedPositionLS = transform.InverseTransformPoint(attachPositionWS);
-                attachedRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
+                (joint, jointBias) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings,flip:jointFlip);
+                handAttachPositionLS = transform.InverseTransformPoint(attachPositionWS);
+                handAttachRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
                 ResetMovement();
                 updateAttachNotImplemented.Invoke(emptyHand.playerRoot);
                 onPickUp.Invoke();
@@ -108,20 +138,20 @@ namespace fzmnm.XRPlayer
                     hand.TransforAttached(emptyHand);
 
                     hand = emptyHand;
-                    (joint, jointBias) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings);
-                    attachedPositionLS = transform.InverseTransformPoint(attachPositionWS);
-                    attachedRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
+                    (joint, jointBias) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings, flip: jointFlip);
+                    handAttachPositionLS = transform.InverseTransformPoint(attachPositionWS);
+                    handAttachRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
 
                     //TODO Test Logic
                 }
                 else
                 {
-                    if (hand2) hand2.DetachIfAny();
+                    if (secondaryHand) secondaryHand.DetachIfAny();
 
-                    hand2 = emptyHand;
-                    (joint2, jointBias2) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings);
-                    attached2PositionLS = transform.InverseTransformPoint(attachPositionWS);
-                    attached2RotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
+                    secondaryHand = emptyHand;
+                    (secondaryJoint, secondaryJointBias) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings, flip: jointFlip);
+                    secondaryHandAttachPositionLS = transform.InverseTransformPoint(attachPositionWS);
+                    secondaryHandAttachRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
                 }
             }
         }
@@ -129,22 +159,22 @@ namespace fzmnm.XRPlayer
         public override void OnDetach(XRHand handAttachedMe)
         {
             Debug.Log($"{name}.OnDetach");
-            if (handAttachedMe == hand2)
+            if (handAttachedMe == secondaryHand)
             {
-                Destroy(joint2); joint2 = null; hand2 = null;
+                Destroy(secondaryJoint); secondaryJoint = null; secondaryHand = null;
                 if (hand.hovering.IsHovering(this))
                 {
-                    attachedPositionLS = transform.InverseTransformPoint(hand.trackedPosition);
-                    attachedRotationLS = Quaternion.Inverse(transform.rotation) * hand.trackedRotation;
+                    handAttachPositionLS = transform.InverseTransformPoint(hand.trackedPosition);
+                    handAttachRotationLS = Quaternion.Inverse(transform.rotation) * hand.trackedRotation;
                 }
             }
             else
             {
-                if (hand2)
+                if (secondaryHand)
                 {
                     if (hand2AutoDrop)
                     {
-                        hand2.DetachIfAny();
+                        secondaryHand.DetachIfAny();
                         Destroy(joint); joint = null; hand = null;
                         _OnDrop();
                     }
@@ -152,11 +182,11 @@ namespace fzmnm.XRPlayer
                     {
                         Destroy(joint); joint = null; hand = null;
 
-                        hand = hand2; hand2 = null;
-                        joint = joint2; joint2 = null;
-                        jointBias = jointBias2;
-                        attachedPositionLS = attached2PositionLS;
-                        attachedRotationLS = attached2RotationLS;
+                        hand = secondaryHand; secondaryHand = null;
+                        joint = secondaryJoint; secondaryJoint = null;
+                        jointBias = secondaryJointBias;
+                        handAttachPositionLS = secondaryHandAttachPositionLS;
+                        handAttachRotationLS = secondaryHandAttachRotationLS;
                     }
                 }
                 else
@@ -170,8 +200,8 @@ namespace fzmnm.XRPlayer
 
         void _OnDrop()
         {
-            body.velocity = smoothedThorwVelocity;
-            body.angularVelocity = smoothedThrowAngularVelocity;
+            //body.velocity = rawThrowVelocityWS;
+            //body.angularVelocity = rawThrowAngularVelocityWS;
             onDrop.Invoke();
             updateAttachNotImplemented.Invoke(null);
         }
@@ -193,8 +223,8 @@ namespace fzmnm.XRPlayer
             {
                 UpdateDesiredMovementAndAttachPosition();
 
-                bool break1 = hand && Vector3.Distance(hand.trackedPosition, transform.TransformPoint(attachedPositionLS)) > lostTrackDist * hand.playerRoot.lossyScale.x;
-                bool break2 = hand2 && Vector3.Distance(hand2.trackedPosition, transform.TransformPoint(attached2PositionLS)) > lostTrackDist * hand.playerRoot.lossyScale.x;
+                bool break1 = hand && Vector3.Distance(hand.trackedPosition, transform.TransformPoint(handAttachPositionLS)) > lostTrackDist * hand.playerRoot.lossyScale.x;
+                bool break2 = secondaryHand && Vector3.Distance(secondaryHand.trackedPosition, transform.TransformPoint(secondaryHandAttachPositionLS)) > lostTrackDist * hand.playerRoot.lossyScale.x;
 
                 if (break1 || break2)
                 {
@@ -205,7 +235,7 @@ namespace fzmnm.XRPlayer
                             hand?.DetachIfAny();
                         }
                         else
-                            hand2.DetachIfAny();
+                            secondaryHand.DetachIfAny();
                     }
                     else
                         ResetMovement();
@@ -215,21 +245,21 @@ namespace fzmnm.XRPlayer
                     //transform.position = desiredPosition;
                     //transform.rotation = desiredRotation;
                     if (joint)
-                        JointTools.UpdateJoint(joint, jointBias, desiredPosition, desiredRotation, hand.estimatedTrackedVelocityWS);
-                    if (joint2)
-                        JointTools.UpdateJoint(joint2, jointBias2, desiredPosition, desiredRotation, hand2.estimatedTrackedVelocityWS);
+                        JointTools.UpdateJoint(joint, jointBias, desiredPosition, desiredRotation, hand.estimatedTrackedVelocityWS,flip:jointFlip);
+                    if (secondaryJoint)
+                        JointTools.UpdateJoint(secondaryJoint, secondaryJointBias, desiredPosition, desiredRotation, secondaryHand.estimatedTrackedVelocityWS, flip: jointFlip);
                 }
             }
 
             {
-                smoothedThorwVelocity = Vector3.Lerp(smoothedThorwVelocity, body.velocity, Time.fixedDeltaTime / throwSmoothTime);
-                smoothedThrowAngularVelocity = Vector3.Lerp(smoothedThrowAngularVelocity, body.angularVelocity, Time.fixedDeltaTime / throwSmoothTime);
+                //smoothedThorwVelocity = Vector3.Lerp(smoothedThorwVelocity, body.velocity, Time.fixedDeltaTime / throwSmoothTime);
+                //smoothedThrowAngularVelocity = Vector3.Lerp(smoothedThrowAngularVelocity, body.angularVelocity, Time.fixedDeltaTime / throwSmoothTime);
             }
 
             if (hand && hand.device.grip < .5f)
                 hand.DetachIfAny();
-            if (hand2 && hand2.device.grip < .5f)
-                hand2.DetachIfAny();
+            if (secondaryHand && secondaryHand.device.grip < .5f)
+                secondaryHand.DetachIfAny();
 
             hasTeleportedThisFrame = false;
         }
@@ -259,54 +289,56 @@ namespace fzmnm.XRPlayer
                 transform.position = desiredPosition;
                 transform.rotation = desiredRotation;
                 if (joint)
-                    JointTools.TeleportJoint(joint, jointBias, desiredPosition, desiredRotation,hand.estimatedTrackedVelocityWS);
-                if (joint2)
-                    JointTools.TeleportJoint(joint2, jointBias2, desiredPosition, desiredRotation, hand2.estimatedTrackedVelocityWS);
+                    JointTools.TeleportJoint(joint, jointBias, desiredPosition, desiredRotation,hand.estimatedTrackedVelocityWS, flip: jointFlip);
+                if (secondaryJoint)
+                    JointTools.TeleportJoint(secondaryJoint, secondaryJointBias, desiredPosition, desiredRotation, secondaryHand.estimatedTrackedVelocityWS, flip: jointFlip);
             }
 
         }
+
+
         void UpdateDesiredMovementAndAttachPosition()
         {
-            if (hand2 && attachMode == AttachMode.PrimarySecondaryHandle)
+            if (secondaryHand && attachMode == AttachMode.PrimarySecondaryHandle)
             {
-                attached2PositionLS = transform.InverseTransformPoint(attach2Ref.position);
-                attached2RotationLS = Quaternion.Inverse(transform.rotation) * attach2Ref.rotation;
+                secondaryHandAttachPositionLS = transform.InverseTransformPoint(secondaryAttachRef.position);
+                secondaryHandAttachRotationLS = Quaternion.Inverse(transform.rotation) * secondaryAttachRef.rotation;
             }
             if (hand && (attachMode == AttachMode.PrimarySecondaryHandle || attachMode == AttachMode.Handle))
             {
-                attachedPositionLS = transform.InverseTransformPoint(attachRef.position);
-                attachedRotationLS = Quaternion.Inverse(transform.rotation) * attachRef.rotation;
+                handAttachPositionLS = transform.InverseTransformPoint(attachRef.position);
+                handAttachRotationLS = Quaternion.Inverse(transform.rotation) * attachRef.rotation;
             }
 
-            if (hand && !hand2)
+            if (hand && !secondaryHand)
             {
-                desiredRotation = hand.trackedRotation * Quaternion.Inverse(attachedRotationLS);
-                desiredPosition = hand.trackedPosition - desiredRotation * Quaternion.Inverse(transform.rotation) * transform.TransformVector(attachedPositionLS);
+                desiredRotation = hand.trackedRotation * Quaternion.Inverse(handAttachRotationLS);
+                desiredPosition = hand.trackedPosition - desiredRotation * Quaternion.Inverse(transform.rotation) * transform.TransformVector(handAttachPositionLS);
             }
-            else if (hand && hand2)
+            else if (hand && secondaryHand)
             {
                 if (attachMode == AttachMode.PrimarySecondaryHandle)
-                    desiredRotation = hand.trackedRotation * Quaternion.Inverse(attachedRotationLS);
+                    desiredRotation = hand.trackedRotation * Quaternion.Inverse(handAttachRotationLS);
                 else
                 {
-                    var rot1 = hand.trackedRotation * Quaternion.Inverse(attachedRotationLS);
-                    var rot2 = hand2.trackedRotation * Quaternion.Inverse(attached2RotationLS);
+                    var rot1 = hand.trackedRotation * Quaternion.Inverse(handAttachRotationLS);
+                    var rot2 = secondaryHand.trackedRotation * Quaternion.Inverse(secondaryHandAttachRotationLS);
                     desiredRotation = Quaternion.Slerp(rot1, rot2, .5f);
                 }
-                var targetTargetAxisWS = transform.TransformVector(attached2PositionLS - attachedPositionLS);
-                var handHandAxisWS = hand2.trackedPosition - hand.trackedPosition;
+                var targetTargetAxisWS = transform.TransformVector(secondaryHandAttachPositionLS - handAttachPositionLS);
+                var handHandAxisWS = secondaryHand.trackedPosition - hand.trackedPosition;
                 var desiredDeltaRotation = desiredRotation * Quaternion.Inverse(transform.rotation);
                 var alignRotation = Quaternion.FromToRotation(desiredDeltaRotation * targetTargetAxisWS, handHandAxisWS);
                 desiredRotation = alignRotation * desiredRotation;
 
                 if (attachMode == AttachMode.PrimarySecondaryHandle)
                 {
-                    desiredPosition = hand.trackedPosition - desiredRotation * Quaternion.Inverse(transform.rotation) * transform.TransformVector(attachedPositionLS);
+                    desiredPosition = hand.trackedPosition - desiredRotation * Quaternion.Inverse(transform.rotation) * transform.TransformVector(handAttachPositionLS);
                 }
                 else if (attachMode == AttachMode.FreeGrabTwoHanded)
                 {
-                    var desiredPosition1 = hand.trackedPosition - desiredRotation * Quaternion.Inverse(transform.rotation) * transform.TransformVector(attachedPositionLS);
-                    var desiredPosition2 = hand2.trackedPosition - desiredRotation * Quaternion.Inverse(transform.rotation) * transform.TransformVector(attached2PositionLS);
+                    var desiredPosition1 = hand.trackedPosition - desiredRotation * Quaternion.Inverse(transform.rotation) * transform.TransformVector(handAttachPositionLS);
+                    var desiredPosition2 = secondaryHand.trackedPosition - desiredRotation * Quaternion.Inverse(transform.rotation) * transform.TransformVector(secondaryHandAttachPositionLS);
 
                     desiredPosition = (desiredPosition1 + desiredPosition2) / 2;
 

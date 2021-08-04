@@ -9,8 +9,17 @@ namespace fzmnm.XRPlayer
         public Transform standUpPos;
         XRLocomotion seatedPlayer;
         public bool isOccupiedByOther { get; private set; } = false;
+        public enum LeaveSeatCondition { None, InputJump};
+        public LeaveSeatCondition leaveSeatCondition = LeaveSeatCondition.InputJump;
 
         public Behaviour[] enableWhenSit;
+
+        [Button]
+        public void LeaveSeat()
+        {
+            if (seatedPlayer)
+                seatedPlayer.LeaveSeat();
+        }
 
         public override bool CanInteract(XRHand hand, out int priority)
         {
@@ -34,6 +43,14 @@ namespace fzmnm.XRPlayer
             Debug.Log($"LeaveSeat {name}");
             foreach (var b in enableWhenSit) if (b) b.enabled = false;
             seatedPlayer = null;
+        }
+        private void FixedUpdate()
+        {
+            if (seatedPlayer)
+            {
+                if (leaveSeatCondition == LeaveSeatCondition.InputJump && seatedPlayer.inputJump.Consume())
+                    LeaveSeat();
+            }
         }
 
 

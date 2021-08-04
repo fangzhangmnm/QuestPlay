@@ -28,7 +28,7 @@ namespace fzmnm.XRPlayer
         }
         void UpdateSeated(float dt)
         {
-            if (!seat ||!seat.isActiveAndEnabled || inputJump) { LeaveSeat();return; }
+            if (!seat ||!seat.isActiveAndEnabled) { LeaveSeat();return; }
 
             Vector3 attachedDelta = attach.GetAttachedTranslation();
             transform.position += attachedDelta;

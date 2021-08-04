@@ -2,6 +2,7 @@
 
 [[[[[features]]]]]
 avatar scaling and fbik
+让tracking space可以缩放
 gravityfield windfield
 剑的摩擦，haptic逻辑重构
 剑打击感，音效

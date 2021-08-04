@@ -7,8 +7,10 @@ namespace fzmnm
     public class JointTools
     {
         //TODO swapbody support
-        public static (ConfigurableJoint, Quaternion) CreateJoint(Rigidbody body, Rigidbody attachedRigidbody, JointSettings jointSettings)
+        public static (ConfigurableJoint, Quaternion) CreateJoint(Rigidbody body, Rigidbody attachedRigidbody, JointSettings jointSettings, bool flip=false)
         {
+            if (flip) { var t = body;body = attachedRigidbody;attachedRigidbody = t; }
+
             var joint = body.gameObject.AddComponent<ConfigurableJoint>();
             joint.autoConfigureConnectedAnchor = false;
             joint.connectedBody = attachedRigidbody;
@@ -24,10 +26,10 @@ namespace fzmnm
         }
 
         public static void UpdateJoint(ConfigurableJoint joint, Quaternion jointSetupInverseAttachedTimesBodyRotation,
-             Vector3 targetPosition, Quaternion targetRotation, Vector3 targetDeltaVelocityWS)
+             Vector3 targetPosition, Quaternion targetRotation, Vector3 targetDeltaVelocityWS, bool flip=false)
         {
-
-             Rigidbody attachedRigidbody = joint.connectedBody;
+            //Rigidbody body = joint.GetComponent<Rigidbody>();
+            Rigidbody attachedRigidbody = joint.connectedBody;
 
             //TODO check anchor is influenced by scale
             // tutorial. all anchors defined in scaled local space.
@@ -35,38 +37,69 @@ namespace fzmnm
             // then transform it back using body's scale but targetPosition and targetRotation
             // joint.transform.InverseTransformVector * joint.transform.rotation acts as the inverse scale transform
             joint.targetPosition = Vector3.zero;
-            joint.connectedAnchor = Vector3.zero; //always at connectedBody's pivot
-            joint.anchor=joint.transform.InverseTransformVector(
-                joint.transform.rotation * Quaternion.Inverse(targetRotation) * (attachedRigidbody.transform.TransformPoint(joint.connectedAnchor) - targetPosition)
-                );
-
+            if (!flip)
+            {
+                joint.connectedAnchor = Vector3.zero; //always at connectedBody's pivot
+                //joint.anchor=joint.transform.AtTargetPositionAndRotation.InverseTransformPoint(attachedRigidbody.transform.TransformPoint(joint.connectedAnchor));
+                Vector3 anchorWS = attachedRigidbody.transform.TransformPoint(joint.connectedAnchor);
+                Vector3 anchorLS = anchorWS - targetPosition;
+                anchorLS = Quaternion.Inverse(targetRotation) * anchorLS;
+                anchorLS = joint.transform.InverseTransformVector(joint.transform.rotation * anchorLS);
+                joint.anchor = anchorLS;
+            }
+            else
+            {
+                joint.anchor = Vector3.zero; //always at connectedBody's pivot
+                //joint.connectedAnchor=attachedRigidbody.transform.AtTargetPositionAndRotation.InverseTransformPoint(joint.transform.TransformPoint(joint.anchor));
+                Vector3 connectedAnchorWS = joint.transform.TransformPoint(joint.anchor);
+                Vector3 connectedAnchorLS = connectedAnchorWS - targetPosition;
+                connectedAnchorLS = Quaternion.Inverse(targetRotation) * connectedAnchorLS;
+                connectedAnchorLS = attachedRigidbody.transform.InverseTransformVector(attachedRigidbody.transform.rotation * connectedAnchorLS);
+                joint.connectedAnchor = connectedAnchorLS;
+            }
             // tutorial. b: body's rotation, a: attached body's rotation, r: joint's target rotation
             // at setup, rotate b0 locally by bias, we achieve a0: b0*bias=a0  =>  bias=b0^-1 a0
             // now, when body is at the target rotation b, it satisfies: after rotate the body locally by r, it retains the initial rotational offset to a:
             // b*r*bias=a => r=b^-1 a a0^-1 b0
-            
-            joint.targetRotation = Quaternion.Inverse(targetRotation) * attachedRigidbody.transform.rotation * jointSetupInverseAttachedTimesBodyRotation;
+            if (!flip)
+                joint.targetRotation = Quaternion.Inverse(targetRotation) * attachedRigidbody.transform.rotation * jointSetupInverseAttachedTimesBodyRotation;
+            else
+                joint.targetRotation = Quaternion.Inverse(joint.transform.rotation) * targetRotation * jointSetupInverseAttachedTimesBodyRotation;
+
 
             // target velocity is the velocity of the connectedAnchor relative to anchor in the body frame
             // choose current rotation gives better stability than target rotation under rapid rotation change and fast movements
-            joint.targetVelocity = -Vector3.Lerp(Quaternion.Inverse(targetRotation) * targetDeltaVelocityWS ,Quaternion.Inverse(joint.transform.rotation)*targetDeltaVelocityWS,1); 
+
+            if (!flip)
+                joint.targetVelocity = -Vector3.Lerp(Quaternion.Inverse(targetRotation) * targetDeltaVelocityWS, Quaternion.Inverse(joint.transform.rotation) * targetDeltaVelocityWS, 1);
+            else
+                joint.targetVelocity = Quaternion.Inverse(joint.transform.rotation) * targetDeltaVelocityWS;
         }
         
         public static void TeleportJoint(ConfigurableJoint joint, Quaternion jointSetupInverseAttachedTimesBodyRotation,
-            Vector3 targetPosition, Quaternion targetRotation, Vector3 targetDeltaVelocityWS)
+            Vector3 targetPosition, Quaternion targetRotation, Vector3 targetDeltaVelocityWS, bool flip=false)
         {
 
             Rigidbody body = joint.GetComponent<Rigidbody>();
             Rigidbody attachedRigidbody = joint.connectedBody;
 
-            //changes in body will not reflect in transform in this frame
-            body.transform.position = targetPosition;
-            //?? + targetDeltaVelocityWS * Time.fixedDeltaTime;
-            body.transform.rotation = targetRotation;
-            body.velocity = (attachedRigidbody.isKinematic?Vector3.zero: attachedRigidbody.velocity)+targetDeltaVelocityWS;
-            body.angularVelocity = Vector3.zero;
+            if (!flip)
+            {
+                body.transform.position = targetPosition;//changes in body will not reflect in transform in this frame
+                //?? + targetDeltaVelocityWS * Time.fixedDeltaTime;
+                body.transform.rotation = targetRotation;
+                body.velocity = (attachedRigidbody.isKinematic ? Vector3.zero : attachedRigidbody.velocity) + targetDeltaVelocityWS;
+                body.angularVelocity = Vector3.zero;
+            }
+            else
+            {
+                attachedRigidbody.transform.position = targetPosition;
+                attachedRigidbody.transform.rotation = targetRotation;
+                attachedRigidbody.velocity = (body.isKinematic ? Vector3.zero : body.velocity) + targetDeltaVelocityWS;
+                attachedRigidbody.angularVelocity = Vector3.zero;
+            }
 
-            UpdateJoint(joint, jointSetupInverseAttachedTimesBodyRotation, targetPosition, targetRotation, targetDeltaVelocityWS);
+            UpdateJoint(joint, jointSetupInverseAttachedTimesBodyRotation, targetPosition, targetRotation, targetDeltaVelocityWS,flip:flip);
         }
     }
 }

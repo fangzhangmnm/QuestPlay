@@ -10,6 +10,7 @@ namespace fzmnm.XRPlayer
         public XRNode whichHand;
         public XRLocomotion playerLocomotion;
         public Rigidbody trackedHand;
+        public JointSettings jointSettings;
         public XRHandHovering hovering;
         public HapticSettings hapticSettings;
 
@@ -22,7 +23,6 @@ namespace fzmnm.XRPlayer
         public XRInteractable attached { get; private set; }
         [HideInInspector] public bool isEmpty => !attached;
         [HideInInspector] public Transform playerRoot;
-        Rigidbody body;
         [HideInInspector] public XRController device;
         [HideInInspector] public bool mouseControl = false;
 
@@ -194,7 +194,7 @@ namespace fzmnm.XRPlayer
                 Vector3 point = collision.GetContact(0).point;
                 Vector3 v1 = body.GetPointVelocity(point);
                 Vector3 v2 = collision.rigidbody ? collision.rigidbody.GetPointVelocity(point) : Vector3.zero;
-                speed = (v2 - v1).magnitude / playerRoot.lossyScale.x;
+                speed = playerLocomotion.trackingSpace.InverseTransformVector(v2 - v1).magnitude;
             }
             float strength = Mathf.Lerp(0, hapticSettings.collisionEnterMaxStrength, speed / hapticSettings.collisionEnterMaxStrengthSpeed);
             device.SendHapticImpulse(strength, hapticSettings.collisionEnterDuration);
@@ -203,6 +203,7 @@ namespace fzmnm.XRPlayer
         }
         #endregion
         bool lastgrip = false, lasttrigger = false;
+        Rigidbody body;
         private void Awake()
         {
             playerRoot = GetComponentInParent<XRLocomotion>().transform;

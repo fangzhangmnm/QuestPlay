@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace fzmnm
 {
-    public class PhysicsDebugger : MonoBehaviour
+    public static class PhysicsDebugger
     {
-        Collider[] clds = new Collider[1];
         public static Color color=Color.white;
         public static bool CapsuleCast(Vector3 P1, Vector3 P2, float radius, Vector3 dir, out RaycastHit hitInfo, float maxDist, int layers)
         {

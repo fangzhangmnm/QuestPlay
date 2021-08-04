@@ -15,6 +15,7 @@ namespace fzmnm.XRPlayer
         public JointSettings jointSettings;
         public float lostTrackDist = .3f;
         public Animator animator;
+        const bool jointFlip = false;
 
         private void Start()
         {
@@ -23,7 +24,8 @@ namespace fzmnm.XRPlayer
             transform.parent = null;
 
             //TODO for fast rotation, try swapbody
-            (joint, jointBias) = JointTools.CreateJoint(body, hand.trackedHand, jointSettings);
+            (joint, jointBias) = JointTools.CreateJoint(body, hand.trackedHand, jointSettings,flip:jointFlip);
+            joint.swapBodies = true;
         }
 
         private void FixedUpdate()
@@ -34,12 +36,10 @@ namespace fzmnm.XRPlayer
                 Debug.Log($"{name} lost track");
             if (hasTeleportedThisFrame||handLostTrack)
             {
-                JointTools.TeleportJoint(joint, jointBias,
-                        hand.trackedPosition, hand.trackedRotation, hand.estimatedTrackedVelocityWS);
+                JointTools.TeleportJoint(joint, jointBias,hand.trackedPosition, hand.trackedRotation, hand.estimatedTrackedVelocityWS, flip: jointFlip);
             }
 
-            JointTools.UpdateJoint(joint, jointBias,
-                hand.trackedPosition, hand.trackedRotation, hand.estimatedTrackedVelocityWS);
+            JointTools.UpdateJoint(joint, jointBias,hand.trackedPosition, hand.trackedRotation, hand.estimatedTrackedVelocityWS, flip: jointFlip);
             hasTeleportedThisFrame = false;
 
             //TODO move to dedicated full body tracking script
@@ -74,7 +74,7 @@ namespace fzmnm.XRPlayer
             body = GetComponent<Rigidbody>();
             Debug.Assert(body.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic);
             Debug.Assert(Physics.defaultMaxAngularSpeed >= 50f);
-            Debug.Assert(Physics.defaultMaxDepenetrationVelocity <= 1f);
+            Debug.Assert(Physics.defaultMaxDepenetrationVelocity <=3f);
             //Also Need to set Physics iterstions=>(10,10) and enableAdaptiveForce
             //Otherwise will trigger false collision when in fast moving vehicles
         }
