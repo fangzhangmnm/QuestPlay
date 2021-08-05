@@ -16,6 +16,8 @@ namespace fzmnm.XRPlayer
 
         public Vector3 trackedPosition => trackedHand.transform.position;//shoud not use body's
         public Quaternion trackedRotation => trackedHand.transform.rotation;
+        public Vector3 meshPosition;
+        public Quaternion meshRotation;
 
         public static XRHand leftHand, rightHand;
         public XRHand otherHand => this == leftHand ? rightHand : leftHand;
@@ -26,8 +28,10 @@ namespace fzmnm.XRPlayer
         [HideInInspector] public XRController device;
         [HideInInspector] public bool mouseControl = false;
 
-        Vector3 oldTrackedPositionTS;
+        Vector3 oldTrackedPositionTS, oldMeshPositionTS;
         [HideInInspector] public Vector3 estimatedTrackedVelocityWS;
+        [HideInInspector] public Vector3 estimatedMeshVelocityWS;
+        bool hasTeleportedThisFrame = false;
 
         private void Start()
         {
@@ -58,6 +62,25 @@ namespace fzmnm.XRPlayer
             estimatedTrackedVelocityWS = playerLocomotion.estimatedPlayerRootVelocity + playerLocomotion.trackingSpace.TransformVector(newTrackedPositionTS - oldTrackedPositionTS) / Time.fixedDeltaTime;
             oldTrackedPositionTS = newTrackedPositionTS;
 
+            if(attached && attached.GetAttachPosition(this, out meshPosition, out meshRotation))
+            {
+                Vector3 newMeshPositionTS;
+                if (!hasTeleportedThisFrame)
+                    newMeshPositionTS = playerLocomotion.trackingSpace.InverseTransformPoint(meshPosition);
+                else //Pickup were not updated
+                    newMeshPositionTS = oldMeshPositionTS;
+                estimatedMeshVelocityWS = playerLocomotion.estimatedPlayerRootVelocity + playerLocomotion.trackingSpace.TransformVector(newMeshPositionTS - oldMeshPositionTS) / Time.fixedDeltaTime;
+                oldMeshPositionTS = newMeshPositionTS;
+
+                meshPosition += estimatedMeshVelocityWS * Time.fixedDeltaTime;//rigidbody will update v¦¤t before render
+            }
+            else
+            {
+                meshPosition = trackedPosition;
+                meshRotation = trackedRotation;
+                estimatedMeshVelocityWS = estimatedTrackedVelocityWS;
+            }
+
 
             hovering.UpdateHovering(isEmpty);
             UpdateIgnoreCollision();
@@ -72,6 +95,7 @@ namespace fzmnm.XRPlayer
                 if (hovering.current.CanInteract(this, out _))
                     hovering.current.OnInteract(this);
             }
+            hasTeleportedThisFrame = false;
         }
         public void Attach(XRInteractable interactable, Vector3 handAttachPositionWS, Quaternion handAttachRotationWS)
         {
@@ -112,6 +136,7 @@ namespace fzmnm.XRPlayer
         }
         public void OnTeleport(Vector3 playerVelocity)
         {
+            hasTeleportedThisFrame = true;
             attached?.OnTeleport(playerVelocity);
         }
         #region IgnoreCollision

@@ -10,7 +10,13 @@ namespace fzmnm.XRPlayer
         public virtual bool CanAttach(XRHand hand, out int priority) { priority = 0; return false; }
         public virtual void OnAttach(XRHand emptyHand, Vector3 attachPositionWS, Quaternion attachRotationWS) { }
         public virtual void OnDetach(XRHand handAttachedMe) { }
-        public virtual bool GetAttachPosition(XRHand hand, out Vector3 position, out Quaternion rotation) { position = hand.trackedPosition; rotation = hand.trackedRotation; return false; }
+        public virtual bool GetAttachPosition(XRHand hand, out Vector3 position, out Quaternion rotation) 
+        { 
+            position = hand.trackedPosition; 
+            rotation = hand.trackedRotation;
+            return false; 
+        }
+
 
         public void OnTeleport(Vector3 playerVelocity) { hasTeleportedThisFrame = true; }
         public bool hasTeleportedThisFrame { get; protected set; } = true;

@@ -6,8 +6,7 @@ namespace fzmnm
 {
     public class JointTools
     {
-        //TODO swapbody support
-        public static (ConfigurableJoint, Quaternion) CreateJoint(Rigidbody body, Rigidbody attachedRigidbody, JointSettings jointSettings, bool flip=false)
+        public static (ConfigurableJoint, Quaternion) CreateGrabJoint(Rigidbody body, Rigidbody attachedRigidbody, JointSettings jointSettings, bool flip=false)
         {
             if (flip) { var t = body;body = attachedRigidbody;attachedRigidbody = t; }
 
@@ -25,7 +24,7 @@ namespace fzmnm
             return (joint, jointSetupInverseAttachedTimesBodyRotation);
         }
 
-        public static void UpdateJoint(ConfigurableJoint joint, Quaternion jointSetupInverseAttachedTimesBodyRotation,
+        public static void UpdateGrabJoint(ConfigurableJoint joint, Quaternion jointSetupInverseAttachedTimesBodyRotation,
              Vector3 targetPosition, Quaternion targetRotation, Vector3 targetDeltaVelocityWS, bool flip=false)
         {
             //Rigidbody body = joint.GetComponent<Rigidbody>();
@@ -76,7 +75,7 @@ namespace fzmnm
                 joint.targetVelocity = Quaternion.Inverse(joint.transform.rotation) * targetDeltaVelocityWS;
         }
         
-        public static void TeleportJoint(ConfigurableJoint joint, Quaternion jointSetupInverseAttachedTimesBodyRotation,
+        public static void TeleportGrabJoint(ConfigurableJoint joint, Quaternion jointSetupInverseAttachedTimesBodyRotation,
             Vector3 targetPosition, Quaternion targetRotation, Vector3 targetDeltaVelocityWS, bool flip=false)
         {
 
@@ -99,7 +98,11 @@ namespace fzmnm
                 attachedRigidbody.angularVelocity = Vector3.zero;
             }
 
-            UpdateJoint(joint, jointSetupInverseAttachedTimesBodyRotation, targetPosition, targetRotation, targetDeltaVelocityWS,flip:flip);
+            UpdateGrabJoint(joint, jointSetupInverseAttachedTimesBodyRotation, targetPosition, targetRotation, targetDeltaVelocityWS,flip:flip);
         }
+
+
+
+
     }
 }

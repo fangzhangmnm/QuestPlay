@@ -11,7 +11,7 @@ namespace fzmnm.XRPlayer
         public void _AddGrab(Grabber grabber,Vector3 attachPositionWS,Quaternion attachRotationWS)
         {
             Debug.Assert(!grabber.joint && !grabber.grabbed);
-            (grabber.joint, grabber.jointBias) = JointTools.CreateJoint(body, grabber.body, grabber.jointSettings);
+            (grabber.joint, grabber.jointBias) = JointTools.CreateGrabJoint(body, grabber.body, grabber.jointSettings);
             grabber.attachPositionLS = transform.InverseTransformPoint(attachPositionWS);
             grabber.attachRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
             grabber.grabbed = this;

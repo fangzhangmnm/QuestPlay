@@ -45,8 +45,8 @@ namespace fzmnm.XRPlayer
                 rotationY = Mathf.Clamp(rotationY < 180 ? rotationY : rotationY - 360, -80, 80);
                 rotationX = Mathf.Repeat(rotationX, 360);
                 head.localEulerAngles = new Vector3(rotationY, rotationX, 0);
-                leftHand.localEulerAngles = new Vector3(rotationY, rotationX, 0);
-                rightHand.localEulerAngles = new Vector3(rotationY, rotationX, 0);
+                leftHand.localEulerAngles = new Vector3(rotationY+45, rotationX, 0);
+                rightHand.localEulerAngles = new Vector3(rotationY+45, rotationX, 0);
                 Quaternion q = Quaternion.Euler(0, rotationX, 0);
                 leftHand.localPosition = q * leftHandLocalPos;
                 rightHand.localPosition = q * rightHandLocalPos;

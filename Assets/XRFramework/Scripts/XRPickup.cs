@@ -124,7 +124,7 @@ namespace fzmnm.XRPlayer
             if (!hand)
             {
                 hand = emptyHand;
-                (joint, jointBias) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings,flip:jointFlip);
+                (joint, jointBias) = JointTools.CreateGrabJoint(body, emptyHand.trackedHand, jointSettings,flip:jointFlip);
                 handAttachPositionLS = transform.InverseTransformPoint(attachPositionWS);
                 handAttachRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
                 ResetMovement();
@@ -138,7 +138,7 @@ namespace fzmnm.XRPlayer
                     hand.TransforAttached(emptyHand);
 
                     hand = emptyHand;
-                    (joint, jointBias) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings, flip: jointFlip);
+                    (joint, jointBias) = JointTools.CreateGrabJoint(body, emptyHand.trackedHand, jointSettings, flip: jointFlip);
                     handAttachPositionLS = transform.InverseTransformPoint(attachPositionWS);
                     handAttachRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
 
@@ -149,7 +149,7 @@ namespace fzmnm.XRPlayer
                     if (secondaryHand) secondaryHand.DetachIfAny();
 
                     secondaryHand = emptyHand;
-                    (secondaryJoint, secondaryJointBias) = JointTools.CreateJoint(body, emptyHand.trackedHand, jointSettings, flip: jointFlip);
+                    (secondaryJoint, secondaryJointBias) = JointTools.CreateGrabJoint(body, emptyHand.trackedHand, jointSettings, flip: jointFlip);
                     secondaryHandAttachPositionLS = transform.InverseTransformPoint(attachPositionWS);
                     secondaryHandAttachRotationLS = Quaternion.Inverse(transform.rotation) * attachRotationWS;
                 }
@@ -196,6 +196,23 @@ namespace fzmnm.XRPlayer
                 }
             }
 
+        }
+        public override bool GetAttachPosition(XRHand hand, out Vector3 position, out Quaternion rotation)
+        {
+            if (hand == this.hand)
+            {
+                position = transform.TransformPoint(handAttachPositionLS);
+                rotation = transform.rotation * handAttachRotationLS;
+                return true;
+            }
+            else if(hand==this.secondaryHand)
+            {
+                position = transform.TransformPoint(secondaryHandAttachPositionLS);
+                rotation = transform.rotation * secondaryHandAttachRotationLS;
+                return true;
+            }
+            else
+                return base.GetAttachPosition(hand, out position, out rotation);
         }
 
         void _OnDrop()
@@ -245,9 +262,9 @@ namespace fzmnm.XRPlayer
                     //transform.position = desiredPosition;
                     //transform.rotation = desiredRotation;
                     if (joint)
-                        JointTools.UpdateJoint(joint, jointBias, desiredPosition, desiredRotation, hand.estimatedTrackedVelocityWS,flip:jointFlip);
+                        JointTools.UpdateGrabJoint(joint, jointBias, desiredPosition, desiredRotation, hand.estimatedTrackedVelocityWS,flip:jointFlip);
                     if (secondaryJoint)
-                        JointTools.UpdateJoint(secondaryJoint, secondaryJointBias, desiredPosition, desiredRotation, secondaryHand.estimatedTrackedVelocityWS, flip: jointFlip);
+                        JointTools.UpdateGrabJoint(secondaryJoint, secondaryJointBias, desiredPosition, desiredRotation, secondaryHand.estimatedTrackedVelocityWS, flip: jointFlip);
                 }
             }
 
@@ -289,9 +306,9 @@ namespace fzmnm.XRPlayer
                 transform.position = desiredPosition;
                 transform.rotation = desiredRotation;
                 if (joint)
-                    JointTools.TeleportJoint(joint, jointBias, desiredPosition, desiredRotation,hand.estimatedTrackedVelocityWS, flip: jointFlip);
+                    JointTools.TeleportGrabJoint(joint, jointBias, desiredPosition, desiredRotation,hand.estimatedTrackedVelocityWS, flip: jointFlip);
                 if (secondaryJoint)
-                    JointTools.TeleportJoint(secondaryJoint, secondaryJointBias, desiredPosition, desiredRotation, secondaryHand.estimatedTrackedVelocityWS, flip: jointFlip);
+                    JointTools.TeleportGrabJoint(secondaryJoint, secondaryJointBias, desiredPosition, desiredRotation, secondaryHand.estimatedTrackedVelocityWS, flip: jointFlip);
             }
 
         }
@@ -354,6 +371,17 @@ namespace fzmnm.XRPlayer
                     throw new System.NotImplementedException();
                 }
             }
+        }
+        public override void OnValidate()
+        {
+            base.OnValidate();
+            body = GetComponent<Rigidbody>();
+            if (body.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic || body.collisionDetectionMode==CollisionDetectionMode.Continuous)
+                Debug.LogWarning("Continuous Dynamic CollisionDetectionMode will raise ghost OnCollisionEnter, consider not using it");
+            if (body.collisionDetectionMode != CollisionDetectionMode.ContinuousSpeculative)
+                Debug.Log("Suggest using ContinuousSpeculative for sword-like objects");
+            if (body.interpolation != RigidbodyInterpolation.None)
+                Debug.LogError("Disable interpolation because we want to sync graphics and physics");
         }
 
     }

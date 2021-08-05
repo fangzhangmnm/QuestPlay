@@ -15,7 +15,7 @@ namespace fzmnm.XRPlayer
         public JointSettings jointSettings;
         public float lostTrackDist = .3f;
         public Animator animator;
-        const bool jointFlip = false;
+        const bool jointFlip = true;
 
         private void Start()
         {
@@ -24,33 +24,54 @@ namespace fzmnm.XRPlayer
             transform.parent = null;
 
             //TODO for fast rotation, try swapbody
-            (joint, jointBias) = JointTools.CreateJoint(body, hand.trackedHand, jointSettings,flip:jointFlip);
-            joint.swapBodies = true;
+            (joint, jointBias) = JointTools.CreateGrabJoint(body, hand.trackedHand, jointSettings,flip:jointFlip);
         }
 
         private void FixedUpdate()
         {
             //TODO unify the data source of scale
-            bool handLostTrack = Vector3.Distance(body.transform.position, hand.trackedPosition) > lostTrackDist * scale;
+            bool handLostTrack = Vector3.Distance(body.transform.position, hand.meshPosition) > lostTrackDist * scale;
             if (handLostTrack)
                 Debug.Log($"{name} lost track");
-            if (hasTeleportedThisFrame||handLostTrack)
+            if (hand.attached)
             {
-                JointTools.TeleportJoint(joint, jointBias,hand.trackedPosition, hand.trackedRotation, hand.estimatedTrackedVelocityWS, flip: jointFlip);
+                body.isKinematic = true;
+                transform.position = hand.meshPosition;
+                transform.rotation = hand.meshRotation;
+                needTeleportJoint = true;
+            }
+            else
+            {
+                body.isKinematic = false;
+
+                if (needTeleportJoint || handLostTrack)
+                    JointTools.TeleportGrabJoint(joint, jointBias, hand.meshPosition, hand.meshRotation, hand.estimatedMeshVelocityWS, flip: jointFlip);
+                needTeleportJoint = false;
+                JointTools.UpdateGrabJoint(joint, jointBias, hand.meshPosition, hand.meshRotation, hand.estimatedMeshVelocityWS, flip: jointFlip);
+
+
             }
 
-            JointTools.UpdateJoint(joint, jointBias,hand.trackedPosition, hand.trackedRotation, hand.estimatedTrackedVelocityWS, flip: jointFlip);
-            hasTeleportedThisFrame = false;
 
             //TODO move to dedicated full body tracking script
             animator.SetFloat(hand.whichHand == XRNode.LeftHand ? "GripL" : "GripR", hand.device.grip);
+        }
+        private void LateUpdate()
+        {
+            if (hand.attached && hand.attached.GetAttachPosition(hand, out Vector3 p, out Quaternion q))
+            {
+                body.isKinematic = true;
+                transform.position = p;
+                transform.rotation = q;
+                needTeleportJoint = true;
+            }
         }
 
 
         Rigidbody body;
         ConfigurableJoint joint;
         Quaternion jointBias;
-        bool hasTeleportedThisFrame = true;
+        bool needTeleportJoint = true;
         float scale => transform.localScale.x;
 
         private void Awake()
@@ -59,7 +80,7 @@ namespace fzmnm.XRPlayer
         }
         void OnTeleport(Vector3 playerVelocity) 
         {
-            hasTeleportedThisFrame = true;
+            needTeleportJoint = true;
         }
         private void OnEnable()
         {
@@ -72,9 +93,19 @@ namespace fzmnm.XRPlayer
         private void OnValidate()
         {
             body = GetComponent<Rigidbody>();
-            Debug.Assert(body.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic);
-            Debug.Assert(Physics.defaultMaxAngularSpeed >= 50f);
+            if (body.collisionDetectionMode != CollisionDetectionMode.ContinuousSpeculative)
+                Debug.Log("Suggest using ContinuousSpeculative");
             Debug.Assert(Physics.defaultMaxDepenetrationVelocity <=3f);
+            if (body.interpolation != RigidbodyInterpolation.None)
+                Debug.LogError("Disable interpolation because we want to sync graphics and physics");
+
+
+            if (Physics.defaultSolverIterations < 15)
+                Debug.LogWarning("Set Physics.defaultSolverIterations>=15 for better sword blocking");
+            if (Physics.defaultMaxAngularSpeed < 50f)
+                Debug.LogError("Set Physics.defaultMaxAngularSpeed>=50 for physica-based hand tracking");
+            if (Physics.defaultMaxDepenetrationVelocity > 3f)
+                Debug.LogWarning("Set Physics.defaultMaxAngularSpeed<3 to avoid ejecting objects when jittering");
             //Also Need to set Physics iterstions=>(10,10) and enableAdaptiveForce
             //Otherwise will trigger false collision when in fast moving vehicles
         }
