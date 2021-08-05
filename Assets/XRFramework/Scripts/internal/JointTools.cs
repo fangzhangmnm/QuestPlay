@@ -87,7 +87,7 @@ namespace fzmnm
                 body.transform.position = targetPosition;//changes in body will not reflect in transform in this frame
                 //?? + targetDeltaVelocityWS * Time.fixedDeltaTime;
                 body.transform.rotation = targetRotation;
-                body.velocity = (attachedRigidbody.isKinematic ? Vector3.zero : attachedRigidbody.velocity) + targetDeltaVelocityWS;
+                body.velocity = (attachedRigidbody.isKinematic ? Vector3.zero : attachedRigidbody.velocity) + targetDeltaVelocityWS;//TODO add angular support
                 body.angularVelocity = Vector3.zero;
             }
             else
