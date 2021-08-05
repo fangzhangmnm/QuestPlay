@@ -126,9 +126,13 @@ public class Outline : MonoBehaviour
 
     void OnValidate()
     {
+        foreach (var meshFilter in GetComponentsInChildren<MeshFilter>())
+            if (!meshFilter.sharedMesh.isReadable)
+                Debug.LogError($"Read/Write not enabled in mesh import setting {meshFilter.sharedMesh.name}");
 
-        // Update material properties
-        needsUpdate = true;
+
+            // Update material properties
+            needsUpdate = true;
 
         // Clear cache when baking is disabled or corrupted
         if (!precomputeOutline && bakeKeys.Count != 0 || bakeKeys.Count != bakeValues.Count)

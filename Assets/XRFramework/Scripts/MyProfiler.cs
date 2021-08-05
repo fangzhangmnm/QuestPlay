@@ -17,6 +17,8 @@ namespace fzmnm
         ProfilerRecorder renderThreadTimeRecorder;
         ProfilerRecorder physicsFixedUpdateTimeRecorder;
         ProfilerRecorder scriptFixedUpdateTimeRecorder;
+        ProfilerRecorder trianglesCountRecorder;
+        ProfilerRecorder verticesCountRecorder;
 
         public Text text;
 
@@ -29,7 +31,9 @@ namespace fzmnm
             renderThreadTimeRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "Render Thread", 15);
             physicsFixedUpdateTimeRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Scripts, "FixedUpdate.PhysicsFixedUpdate", 15);
             scriptFixedUpdateTimeRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Scripts, "FixedUpdate.ScriptRunBehaviourFixedUpdate", 15);
-            
+            trianglesCountRecorder= ProfilerRecorder.StartNew(ProfilerCategory.Render, "Triangles Count");
+            verticesCountRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Vertices Count");
+
             StartCoroutine(MainLoop());
         }
 
@@ -43,6 +47,8 @@ namespace fzmnm
             renderThreadTimeRecorder.Dispose();
             physicsFixedUpdateTimeRecorder.Dispose();
             scriptFixedUpdateTimeRecorder.Dispose();
+            trianglesCountRecorder.Dispose();
+            verticesCountRecorder.Dispose();
         }
         IEnumerator MainLoop()
         {
@@ -62,6 +68,7 @@ namespace fzmnm
             sb.AppendLine($"Scripts FixedUpdate: {GetRecorderFrameAverage(scriptFixedUpdateTimeRecorder) * (1e-6f):F3} ms");
             sb.AppendLine($"GC Memory: {gcMemoryRecorder.LastValue / 1048576} MB");
             sb.AppendLine($"System Memory: {systemMemoryRecorder.LastValue / 1048576} MB");
+            sb.AppendLine($"Tris: {trianglesCountRecorder.LastValue}    Verts: {verticesCountRecorder.LastValue}");
             sb.AppendLine($"Draw Calls: {drawCallsCountRecorder.LastValue}");
             text.text = sb.ToString();
         }
