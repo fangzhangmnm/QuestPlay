@@ -101,6 +101,22 @@ namespace fzmnm
             UpdateGrabJoint(joint, jointSetupInverseAttachedTimesBodyRotation, targetPosition, targetRotation, targetDeltaVelocityWS,flip:flip);
         }
 
+        public static void SetIgnoreCollision(Rigidbody a, Rigidbody b, bool ignore)
+        {
+            if (a != null && b != null)
+                foreach (var ac in a.GetComponentsInChildren<Collider>())
+                    if (ac.attachedRigidbody == a)
+                        foreach (var bc in b.GetComponentsInChildren<Collider>())
+                            if (bc.attachedRigidbody == b)
+                                Physics.IgnoreCollision(ac, bc, ignore);
+        }
+        public static bool IsGhostCollision(Collision collision)
+        {
+            for (int i = 0; i < collision.contactCount; ++i)
+                if (collision.contacts[i].separation <= Physics.defaultContactOffset)
+                    return false;
+            return true;
+        }
 
 
 

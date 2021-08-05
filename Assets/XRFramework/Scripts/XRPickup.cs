@@ -39,7 +39,7 @@ namespace fzmnm.XRPlayer
 
         public Transform attachRef, secondaryAttachRef;
         public JointSettings jointSettingsOverride;
-        public float lostTrackDist = .3f;
+        public float lostTrackDist = .6f;
         //public float throwSmoothTime = .1f;
         public bool breakWhenLostTrack = false;
         #endregion
@@ -281,10 +281,25 @@ namespace fzmnm.XRPlayer
             hasTeleportedThisFrame = false;
         }
 
+        bool trueCollisionEnterTriggered;
         private void OnCollisionEnter(Collision collision)//Will be called before start
         {
+            trueCollisionEnterTriggered = false;
+            if (!trueCollisionEnterTriggered && !JointTools.IsGhostCollision(collision))
+                OnTrueCollisionEnter(collision);
+        }
+        private void OnCollisionStay(Collision collision)
+        {
+            if (!trueCollisionEnterTriggered && !JointTools.IsGhostCollision(collision))
+                OnTrueCollisionEnter(collision);
+        }
+        void OnTrueCollisionEnter(Collision collision)
+        {
+            trueCollisionEnterTriggered = true;
+
             if (hand)
             {
+
                 float speed = 1f;
                 if (collision.contactCount > 0)
                 {
@@ -376,10 +391,9 @@ namespace fzmnm.XRPlayer
         {
             base.OnValidate();
             body = GetComponent<Rigidbody>();
-            if (body.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic || body.collisionDetectionMode==CollisionDetectionMode.Continuous)
-                Debug.LogWarning("Continuous Dynamic CollisionDetectionMode will raise ghost OnCollisionEnter, consider not using it");
-            if (body.collisionDetectionMode != CollisionDetectionMode.ContinuousSpeculative)
-                Debug.Log("Suggest using ContinuousSpeculative for sword-like objects");
+            if (body.collisionDetectionMode == CollisionDetectionMode.ContinuousSpeculative)
+                Debug.LogWarning("ContinuousSpeculative CollisionDetectionMode will raise ghost OnCollisionEnter on fast moving vehicles, " +
+                    "However, it is still recommended for sword-like objects");
             if (body.interpolation != RigidbodyInterpolation.None)
                 Debug.LogError("Disable interpolation because we want to sync graphics and physics");
         }

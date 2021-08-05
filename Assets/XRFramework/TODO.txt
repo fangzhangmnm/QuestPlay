@@ -18,6 +18,7 @@ max throw kinematic energy
 长柄的投掷问题。重心速度，还有和手的碰撞
 转弯时teleport还会抖一下的问题, joint内部速度？
 检查手的碰撞cooldown
+ContinuousSpeculative高速车上碰撞的问题
 
 
 

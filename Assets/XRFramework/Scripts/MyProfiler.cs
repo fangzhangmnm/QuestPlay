@@ -75,9 +75,8 @@ namespace fzmnm
             var samples = new List<ProfilerRecorderSample>(samplesCount);
             recorder.CopyTo(samples);
             for (var i = 0; i < samples.Count; ++i)
-                r += samples[i].Value;
-            r /= samplesCount;
-
+                if(samples[i].Value>0)
+                    r += ((double)samples[i].Value)/samplesCount;
             return r;
         }
     }

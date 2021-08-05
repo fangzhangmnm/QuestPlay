@@ -11,7 +11,7 @@ namespace fzmnm.XRPlayer
     public class XRBareHand : MonoBehaviour
     {
         public XRHand hand;
-
+        Collider[] colliders;
         public JointSettings jointSettings;
         public float lostTrackDist = .3f;
         public Animator animator;
@@ -35,14 +35,24 @@ namespace fzmnm.XRPlayer
                 Debug.Log($"{name} lost track");
             if (hand.attached)
             {
-                body.isKinematic = true;
+                if (!body.isKinematic)
+                {
+                    body.isKinematic = true;
+                    //Turning off the colliders is essential for kinematic updated rbs
+                    foreach (var c in colliders) c.enabled = false;
+                }
                 transform.position = hand.meshPosition;
                 transform.rotation = hand.meshRotation;
+                body.velocity = hand.estimatedMeshVelocityWS;
                 needTeleportJoint = true;
             }
             else
             {
-                body.isKinematic = false;
+                if (body.isKinematic)
+                {
+                    body.isKinematic = false;
+                    foreach (var c in colliders) c.enabled = true;
+                }
 
                 if (needTeleportJoint || handLostTrack)
                     JointTools.TeleportGrabJoint(joint, jointBias, hand.meshPosition, hand.meshRotation, hand.estimatedMeshVelocityWS, flip: jointFlip);
@@ -77,6 +87,7 @@ namespace fzmnm.XRPlayer
         private void Awake()
         {
             body = GetComponent<Rigidbody>();
+            colliders = GetComponentsInChildren<Collider>();
         }
         void OnTeleport(Vector3 playerVelocity) 
         {
@@ -93,8 +104,10 @@ namespace fzmnm.XRPlayer
         private void OnValidate()
         {
             body = GetComponent<Rigidbody>();
-            if (body.collisionDetectionMode != CollisionDetectionMode.ContinuousSpeculative)
-                Debug.Log("Suggest using ContinuousSpeculative");
+            if (body.collisionDetectionMode != CollisionDetectionMode.ContinuousDynamic)
+                Debug.Log("Suggest using ContinuousDynamic CollisionDetectionMode");
+            if (body.collisionDetectionMode == CollisionDetectionMode.ContinuousSpeculative)
+                Debug.LogError("Continuous Dynamic CollisionDetectionMode will raise ghost OnCollisionEnter on fast moving vehicles");
             Debug.Assert(Physics.defaultMaxDepenetrationVelocity <=3f);
             if (body.interpolation != RigidbodyInterpolation.None)
                 Debug.LogError("Disable interpolation because we want to sync graphics and physics");
