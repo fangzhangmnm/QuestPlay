@@ -42,9 +42,10 @@ namespace fzmnm.XRPlayer
         public float lostTrackDist = .6f;
         //public float throwSmoothTime = .1f;
         public bool breakWhenLostTrack = false;
+        public float smoothTime = .1f;
         #endregion
 
-
+        SmoothVelocity smoothVelocity;
         Rigidbody body;
         ConfigurableJoint joint, secondaryJoint;
         Quaternion jointBias, secondaryJointBias;
@@ -70,6 +71,7 @@ namespace fzmnm.XRPlayer
         private void Awake()
         {
             body = GetComponent<Rigidbody>();
+            smoothVelocity = new SmoothVelocity(body);
             if (!attachRef) attachRef = transform;
         }
 
@@ -217,8 +219,8 @@ namespace fzmnm.XRPlayer
 
         void _OnDrop()
         {
-            //body.velocity = rawThrowVelocityWS;
-            //body.angularVelocity = rawThrowAngularVelocityWS;
+            body.velocity = smoothVelocity.smoothedCOMVelocity;
+            body.angularVelocity = smoothVelocity.smoothedAngularVelocity;
             onDrop.Invoke();
             updateAttachNotImplemented.Invoke(null);
         }
@@ -236,6 +238,7 @@ namespace fzmnm.XRPlayer
                 ResetMovement();
             }
 
+
             if (hand)
             {
                 UpdateDesiredMovementAndAttachPosition();
@@ -252,7 +255,10 @@ namespace fzmnm.XRPlayer
                             hand?.DetachIfAny();
                         }
                         else
+                        {
+                            smoothVelocity.Pause(.1f);
                             secondaryHand.DetachIfAny();
+                        }
                     }
                     else
                         ResetMovement();
@@ -268,10 +274,11 @@ namespace fzmnm.XRPlayer
                 }
             }
 
-            {
-                //smoothedThorwVelocity = Vector3.Lerp(smoothedThorwVelocity, body.velocity, Time.fixedDeltaTime / throwSmoothTime);
-                //smoothedThrowAngularVelocity = Vector3.Lerp(smoothedThrowAngularVelocity, body.angularVelocity, Time.fixedDeltaTime / throwSmoothTime);
-            }
+
+            smoothVelocity.smoothTime = smoothTime;
+            if (hasTeleportedThisFrame)
+                smoothVelocity.Pause(.1f);
+            smoothVelocity.Update(Time.fixedDeltaTime);
 
             if (hand && hand.device.grip < .5f)
                 hand.DetachIfAny();

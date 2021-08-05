@@ -16,7 +16,7 @@ namespace fzmnm
             Rigidbody body = GetComponent<Rigidbody>();
             if (centerOfMassPosition == null) centerOfMassPosition = transform;
             body.ResetCenterOfMass();
-            body.centerOfMass = transform.InverseTransformPoint(centerOfMassPosition.position);
+            body.centerOfMass = Quaternion.Inverse(transform.rotation)*(centerOfMassPosition.position-transform.position);//not affected by scale!
             body.ResetInertiaTensor();
             var v = body.inertiaTensor;
             if (scaleInertiaTensor)
@@ -31,6 +31,7 @@ namespace fzmnm
                 v.z = Mathf.Max(v.z, min);
             }
             body.inertiaTensor = v;
+            Destroy(this);
         }
     }
 

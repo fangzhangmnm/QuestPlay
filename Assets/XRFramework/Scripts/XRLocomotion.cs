@@ -14,7 +14,8 @@ namespace fzmnm.XRPlayer
     {
         public Transform trackingSpace => tracking.trackingSpace;
         public Transform head => tracking.head;
-        public float speed = 3f; 
+        public float speed = 3f;
+        public float dashSpeed = 7f;
         public float jumpSpeed = 4.5f;
         public float drag = .001f;
         public float joystickDeadZone = .2f;
@@ -101,6 +102,7 @@ namespace fzmnm.XRPlayer
 
 
         [HideInInspector] public ButtonInput inputJump = new ButtonInput();
+        [HideInInspector] public bool inputDash;
         [HideInInspector] public Vector2 inputStickL, inputStickR;
         [HideInInspector] public bool mouseControl = false;
         void GetInput()
@@ -110,12 +112,17 @@ namespace fzmnm.XRPlayer
             inputStickL = inputStickR = Vector2.zero;
             var leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
             if (leftController.isValid)
+            {
                 if (leftController.TryGetFeatureValue(UnityEngine.XR.CommonUsages.primary2DAxis, out Vector2 value))
                     inputStickL = value;
+                if (leftController.TryGetFeatureValue(UnityEngine.XR.CommonUsages.primary2DAxisClick, out bool value2))
+                    inputDash = value2;
+            }
             var rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
             if (rightController.isValid)
                 if (rightController.TryGetFeatureValue(UnityEngine.XR.CommonUsages.primary2DAxis, out Vector2 value))
                     inputStickR = value;
+
             inputJump.Update(inputStickR.y > .5f && inputStickR.y > Mathf.Abs(inputStickR.x));
         }
         float rotateCD;

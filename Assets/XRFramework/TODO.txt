@@ -1,21 +1,21 @@
 
 
 [[[[[features]]]]]
-avatar scaling and fbik
-让tracking space可以缩放
-gravityfield windfield
-剑的摩擦，haptic逻辑重构
+物品架子
+攀爬
+射箭
 剑打击感，音效
+摩擦振动反馈
+gravityfield windfield
+Avatar （scaling, vrik，assetbundle）
 正反手，pole
 敌人角色的fbik和擒抱
-擒抱系统
 受力和疲劳度
-max throw kinematic energy
-射箭
 
 [[[[[bugs]]]]]
-剑戳进去的摩檫力
+投掷，max throw kinematic energy？
 长柄的投掷问题。重心速度，还有和手的碰撞
+
 转弯时teleport还会抖一下的问题, joint内部速度？
 检查手的碰撞cooldown
 ContinuousSpeculative高速车上碰撞的问题
@@ -29,6 +29,7 @@ ContinuousSpeculative高速车上碰撞的问题
 locomotion给速度不再自己估算
 椅子上坐起会失去惯性
 转弯时teleport还会抖一下的问题
+剑的摩擦
 
 
 [[[[[ideas]]]]]
