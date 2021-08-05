@@ -57,7 +57,7 @@ namespace fzmnm
                 mirrorCamera.projectionMatrix = Matrix4x4.Frustum(r, l, d, u, n, f);
             }
 
-            mirrorCamera.enabled = f>n && n > 0 && !isCulled && (transform.position-mainCamera.transform.position).magnitude<maxUpdateDistance;
+            mirrorCamera.enabled = isActiveAndEnabled && f>n && n > 0 && !isCulled && (transform.position-mainCamera.transform.position).magnitude<maxUpdateDistance;
         }
         bool tmpInvertCulling;
         bool isCulled = false;
