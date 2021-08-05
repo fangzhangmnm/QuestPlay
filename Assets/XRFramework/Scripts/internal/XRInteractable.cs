@@ -22,13 +22,15 @@ namespace fzmnm.XRPlayer
         public bool hasTeleportedThisFrame { get; protected set; } = true;
         public virtual void OnInteract(XRHand hand) { }
         public Behaviour hoveringEffect;
-        public virtual void SetHovering(bool isHovering) { hoveringEffect.enabled = isHovering; }
+        public virtual void SetHovering(bool isHovering) { if(hoveringEffect)hoveringEffect.enabled = isHovering; }
         public virtual void OnEnable() { hoveringEffect.enabled = false; }
 
         public virtual void OnValidate()
         {
             if (!LayerMask.LayerToName(gameObject.layer).StartsWith("Interactable"))
                 Debug.LogError("The Layer for interactable objects must be \"InteractableXXX\"");
+            if (!hoveringEffect)
+                Debug.LogWarning("No HoveringEffect");
             //Debug.Assert(gameObject.GetComponent<Rigidbody>());
         }
     }

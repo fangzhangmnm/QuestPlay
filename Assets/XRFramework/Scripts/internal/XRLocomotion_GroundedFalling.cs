@@ -32,7 +32,7 @@ namespace fzmnm.XRPlayer
             if (inputStickL.magnitude < joystickDeadZone) inputDelta = Vector3.zero;
             if (inputDelta.magnitude > 0)
                 isFakeMoving = true;
-            inputDelta *= speed * dt;
+            inputDelta *= (inputDash ? dashSpeed : speed) * dt;
 
             Vector3 trackedDelta = ProjectHorizontal(head.position - transform.position);
 
