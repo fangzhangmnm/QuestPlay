@@ -60,5 +60,17 @@ namespace fzmnm
             }
 #endif
         }
+        public static void ShowVectorInGame(Vector3 origin, Vector3 vec, float time = 1f)
+        {
+            if (vec.magnitude > 0.000001f)
+            {
+                var b = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                b.GetComponent<BoxCollider>().enabled = false;
+                b.transform.position = origin + vec / 2;
+                b.transform.localScale = new Vector3(.01f, .01f, vec.magnitude + .01f);
+                b.transform.rotation = Quaternion.LookRotation(vec);
+                GameObject.Destroy(b, time);
+            }
+        }
     }
 }

@@ -110,6 +110,15 @@ namespace fzmnm
                             if (bc.attachedRigidbody == b)
                                 Physics.IgnoreCollision(ac, bc, ignore);
         }
+        public static void SetIgnoreCollision(Rigidbody a, Transform sceneObject, bool ignore)
+        {
+            if (a != null && sceneObject != null)
+                foreach (var ac in a.GetComponentsInChildren<Collider>())
+                    if (ac.attachedRigidbody == a)
+                        foreach (var bc in sceneObject.GetComponentsInChildren<Collider>())
+                            if (bc.attachedRigidbody == null)
+                                Physics.IgnoreCollision(ac, bc, ignore);
+        }
         public static bool IsGhostCollision(Collision collision)
         {
             for (int i = 0; i < collision.contactCount; ++i)

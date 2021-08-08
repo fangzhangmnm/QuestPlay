@@ -6,7 +6,7 @@ using UnityEngine;
 public class Racket : MonoBehaviour
 {
     public float smoothTime=.1f;
-    [HideInInspector] public float smoothedSpeed, speed, smoothedAngularSped, angularSpeed;
+    [HideInInspector] public float smoothedSpeed, speed, smoothedAngularSpeed, angularSpeed;
     [HideInInspector] public Vector3 smoothedVelocity, smoothedAngularVelocity, smoothedPosition;
     [HideInInspector] public Quaternion smoothedRotation=Quaternion.identity;
     Rigidbody body;
@@ -24,7 +24,7 @@ public class Racket : MonoBehaviour
         smoothedRotation = Quaternion.Slerp(smoothedRotation, body.rotation, Time.fixedDeltaTime / smoothTime);
         smoothedSpeed = smoothedVelocity.magnitude;
         speed = body.velocity.magnitude;
-        smoothedAngularSped = smoothedAngularVelocity.magnitude;
+        smoothedAngularSpeed = smoothedAngularVelocity.magnitude;
         angularSpeed = body.angularVelocity.magnitude;
     }
     private void OnValidate()
