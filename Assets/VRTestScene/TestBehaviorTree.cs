@@ -16,13 +16,13 @@ public class TestBehaviorTree : MonoBehaviour
             new Monitor().Name("Patrol").AddConditions(
                 new ConditionNode(() => tired < 10f).Name("Not tired"))
             .Add(
-                new Repeater(Repeater.RepeatInfinity).Add(
+                
                     new Sequencer().Add(
                         new ActionNode(this.FetchNextTarget),
                         new ActionNode(this.MoveToTarget),
                         new WaitForSecondsNode(1)
                         )
-                    )
+                    
             );
         var rest =
             new Sequencer().Name("Rest").Add(
@@ -81,8 +81,8 @@ public class TestBehaviorTree : MonoBehaviour
         Profiler.BeginSample("Behavior Tree");
         tree.Tick();
         Profiler.EndSample();
-        //log = tree.Log(expandAll: false);
-        //log += "\n";
-        //log += tree2.Log(expandAll: false);
+        log = tree.Log(expandAll: false);
+        log += "\n";
+        log += tree2.Log(expandAll: false);
     }
 }

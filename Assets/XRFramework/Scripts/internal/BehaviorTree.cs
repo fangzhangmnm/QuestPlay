@@ -13,7 +13,7 @@ namespace fzmnm.BehaviorTree
         bool debug_hasEnded = true;
         protected virtual void Start() { if (!debug_hasEnded) Debug.LogAssertion("Start before End"); debug_hasEnded = false; }
         protected abstract State Update();
-        protected virtual void End() { debug_hasEnded = true; }//Called if not running next frame
+        protected virtual void End() { debug_hasEnded = true; Debug.Assert(state == State.Running || state == State.Failed || state == State.Succeed); }//Called if not running next frame
 
         public State state { get; private set; } = State.Pending; 
         public bool IsRunning => state == State.Running;
@@ -37,6 +37,7 @@ namespace fzmnm.BehaviorTree
         }
         public void Reset()
         {
+            Debug.Log($"{name} ({typeName}) Reset");
             if (IsRunning) End();
             state = State.Pending;
         }
@@ -57,7 +58,7 @@ namespace fzmnm.BehaviorTree
             else if (state == State.Failed) stateChar = '¡Á';
             else if (state == State.Aborted) stateChar = '¢ò';
             else stateChar = '¡õ';
-            stringBuilder.AppendLine($"{new string(' ', 4 * indent)}{stateChar}{GetLogPrefix()}{name}({typeName}) {postfix}");
+            stringBuilder.AppendLine($"{new string(' ', 4 * indent)}{stateChar}{GetLogPrefix()}{name} ({typeName}) {postfix}");
         }
         public string Log(bool expandAll=false)
         {
@@ -167,6 +168,7 @@ namespace fzmnm.BehaviorTree
 
                 if (c.state != State.Succeed && c.state != State.Failed)
                     c.Tick();
+                Debug.Log(c.state);
                 if (c.state == State.Succeed)
                 {
                     ++successCount;
@@ -180,6 +182,7 @@ namespace fzmnm.BehaviorTree
                         return State.Failed;
                 }
             }
+            Debug.Log(successCount);
             if (successPolicy == Policy.All && successCount == children.Count)
                 return State.Succeed;
             if (failPolicy == Policy.All && failCount == children.Count)
@@ -190,7 +193,7 @@ namespace fzmnm.BehaviorTree
     }
     public class Monitor:Parallel
     {
-        public Monitor() : base(success: All, fail: Once) { }
+        public Monitor() : base(success: Once, fail: Once) { }
         public Monitor AddConditions(params Node[] children)
         {
             foreach(var c in children)
@@ -218,7 +221,7 @@ namespace fzmnm.BehaviorTree
         public override void LogNode(StringBuilder stringBuilder, int indent = 0, string postfix = "", bool expandAll = false)
         {
             if (child != null)
-                child.LogNode(stringBuilder, indent, $"<{GetLogPrefix()}{name}({typeName})"+ postfix , expandAll: expandAll);
+                child.LogNode(stringBuilder, indent, $"<{GetLogPrefix()}{name} ({typeName})"+ postfix , expandAll: expandAll);
             else
                 base.LogNode(stringBuilder, indent, postfix, expandAll: expandAll);
 
@@ -255,9 +258,12 @@ namespace fzmnm.BehaviorTree
             int alert = 0;
             for (; counter < limit || limit==-1; ++counter)
             {
+                if(child.state==State.Succeed)
+                    child.Reset();
                 child.Tick();
                 if (child.state == State.Running) return State.Running;
                 else if (child.state == State.Failed) return State.Failed;
+
                 if (++alert > 1000)
                 {
                     Debug.LogError("Seemingly Infinite Loop. Halt.");
