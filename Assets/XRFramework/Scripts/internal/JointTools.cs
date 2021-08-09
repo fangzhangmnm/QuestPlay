@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace fzmnm
 {
-    public class JointTools
+    public static class JointTools
     {
         public static (ConfigurableJoint, Quaternion) CreateGrabJoint(Rigidbody body, Rigidbody attachedRigidbody, JointSettings jointSettings, bool flip=false)
         {
@@ -109,22 +109,6 @@ namespace fzmnm
                         foreach (var bc in b.GetComponentsInChildren<Collider>())
                             if (bc.attachedRigidbody == b)
                                 Physics.IgnoreCollision(ac, bc, ignore);
-        }
-        public static void SetIgnoreCollision(Rigidbody a, Transform sceneObject, bool ignore)
-        {
-            if (a != null && sceneObject != null)
-                foreach (var ac in a.GetComponentsInChildren<Collider>())
-                    if (ac.attachedRigidbody == a)
-                        foreach (var bc in sceneObject.GetComponentsInChildren<Collider>())
-                            if (bc.attachedRigidbody == null)
-                                Physics.IgnoreCollision(ac, bc, ignore);
-        }
-        public static bool IsGhostCollision(Collision collision)
-        {
-            for (int i = 0; i < collision.contactCount; ++i)
-                if (collision.contacts[i].separation <= Physics.defaultContactOffset)
-                    return false;
-            return true;
         }
 
 
