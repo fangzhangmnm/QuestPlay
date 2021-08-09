@@ -26,7 +26,7 @@ namespace fzmnm.XRPlayer
         private void OnCollisionStay(Collision collision)
         {
             if (!isActiveAndEnabled) return;
-            if (JointTools.IsGhostCollision(collision)) return;
+            if (PhysicsTools.IsGhostCollision(collision)) return;
             if (collision.relativeVelocity.magnitude < 2f) return;
             if (Vector3.Dot(stabDir, -collision.relativeVelocity.normalized) < .8f) return;
             if (collision.contacts[0].thisCollider != blade) return;

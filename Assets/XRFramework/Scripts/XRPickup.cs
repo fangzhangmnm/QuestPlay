@@ -292,12 +292,12 @@ namespace fzmnm.XRPlayer
         private void OnCollisionEnter(Collision collision)//Will be called before start
         {
             trueCollisionEnterTriggered = false;
-            if (!trueCollisionEnterTriggered && !JointTools.IsGhostCollision(collision))
+            if (!trueCollisionEnterTriggered && !PhysicsTools.IsGhostCollision(collision))
                 OnTrueCollisionEnter(collision);
         }
         private void OnCollisionStay(Collision collision)
         {
-            if (!trueCollisionEnterTriggered && !JointTools.IsGhostCollision(collision))
+            if (!trueCollisionEnterTriggered && !PhysicsTools.IsGhostCollision(collision))
                 OnTrueCollisionEnter(collision);
         }
         void OnTrueCollisionEnter(Collision collision)
@@ -399,10 +399,10 @@ namespace fzmnm.XRPlayer
             base.OnValidate();
             body = GetComponent<Rigidbody>();
             if (body.collisionDetectionMode == CollisionDetectionMode.ContinuousSpeculative)
-                Debug.LogWarning("ContinuousSpeculative CollisionDetectionMode will raise ghost OnCollisionEnter on fast moving vehicles, " +
+                Debug.LogWarning(name+": ContinuousSpeculative CollisionDetectionMode will raise ghost OnCollisionEnter on fast moving vehicles, " +
                     "However, it is still recommended for sword-like objects");
             if (body.interpolation != RigidbodyInterpolation.None)
-                Debug.LogError("Disable interpolation because we want to sync graphics and physics");
+                Debug.LogError(name + ": Disable interpolation because we want to sync graphics and physics");
         }
 
     }
