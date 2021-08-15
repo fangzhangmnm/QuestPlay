@@ -818,7 +818,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hand: {fileID: 7358491601920738180}
   jointSettings: {fileID: 11400000, guid: 3c66d7cd553fe604b914c06333641fab, type: 2}
-  lostTrackDist: 0.3
+  lostTrackDist: 0.6
   animator: {fileID: 7161284205291428933}
 --- !u!114 &7358491601920738180
 MonoBehaviour:
@@ -938,7 +938,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hand: {fileID: 5051008342263721172}
   jointSettings: {fileID: 11400000, guid: 3c66d7cd553fe604b914c06333641fab, type: 2}
-  lostTrackDist: 0.3
+  lostTrackDist: 0.6
   animator: {fileID: 7161284204048326628}
 --- !u!114 &5051008342263721172
 MonoBehaviour:
@@ -1820,6 +1820,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   seat: {fileID: 0}
   speed: 3
+  dashSpeed: 7
   jumpSpeed: 4.5
   drag: 0.001
   joystickDeadZone: 0.2
@@ -1829,6 +1830,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   debug_Statename: 
+  inputDash: 0
   inputStickL: {x: 0, y: 0}
   inputStickR: {x: 0, y: 0}
   mouseControl: 0

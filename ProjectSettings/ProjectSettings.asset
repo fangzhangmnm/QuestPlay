@@ -676,7 +676,20 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    1: ENVIRO_LW
+    7: ENVIRO_LW
+    13: ENVIRO_LW
+    14: ENVIRO_LW
+    19: ENVIRO_LW
+    21: ENVIRO_LW
+    25: ENVIRO_LW
+    27: ENVIRO_LW
+    28: ENVIRO_LW
+    29: ENVIRO_LW
+    30: ENVIRO_LW
+    32: ENVIRO_LW
+    33: ENVIRO_LW
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
@@ -695,7 +708,8 @@ PlayerSettings:
   assemblyVersionValidation: 1
   gcWBarrierValidation: 0
   apiCompatibilityLevelPerPlatform:
-    Android: 6
+    Android: 3
+    Standalone: 3
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
   metroPackageName: Template_3D
@@ -766,7 +780,7 @@ PlayerSettings:
     m_VersionCode: 1
     m_VersionName: 
   apiCompatibilityLevel: 6
-  activeInputHandler: 1
+  activeInputHandler: 2
   cloudProjectId: 
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []

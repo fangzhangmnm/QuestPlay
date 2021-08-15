@@ -60,6 +60,43 @@ namespace fzmnm
             }
 #endif
         }
+        public static void DebugDrawCircle(Vector3 pos, Quaternion rot, float radius, Color color)
+        {
+
+#if UNITY_EDITOR
+            for (int i = 0; i < 20; ++i)
+            {
+                float c = Mathf.Cos(i * Mathf.PI * 2 / 20);
+                float s = Mathf.Sin(i * Mathf.PI * 2 / 20);
+                float c1 = Mathf.Cos((i + 1) * Mathf.PI * 2 / 20);
+                float s1 = Mathf.Sin((i + 1) * Mathf.PI * 2 / 20);
+                Debug.DrawLine(pos + rot*new Vector3(radius * c, radius * s, 0), pos + rot * new Vector3(radius * c1, radius * s1, 0), color);
+            }
+#endif
+        }
+        public static void DebugDrawBox(Vector3 pos,Quaternion rot, Vector3 halfExtents,Color color)
+        {
+            Vector3 v000 = pos + rot * new Vector3(halfExtents.x, halfExtents.y, halfExtents.z);
+            Vector3 v001 = pos + rot * new Vector3(halfExtents.x, halfExtents.y, -halfExtents.z);
+            Vector3 v010 = pos + rot * new Vector3(halfExtents.x, -halfExtents.y, halfExtents.z);
+            Vector3 v011 = pos + rot * new Vector3(halfExtents.x, -halfExtents.y, -halfExtents.z);
+            Vector3 v100 = pos + rot * new Vector3(-halfExtents.x, halfExtents.y, halfExtents.z);
+            Vector3 v101 = pos + rot * new Vector3(-halfExtents.x, halfExtents.y, -halfExtents.z);
+            Vector3 v110 = pos + rot * new Vector3(-halfExtents.x, -halfExtents.y, halfExtents.z);
+            Vector3 v111 = pos + rot * new Vector3(-halfExtents.x, -halfExtents.y, -halfExtents.z);
+            Debug.DrawLine(v000, v001, color);
+            Debug.DrawLine(v000, v010, color);
+            Debug.DrawLine(v000, v100, color);
+            Debug.DrawLine(v011, v010, color);
+            Debug.DrawLine(v011, v001, color);
+            Debug.DrawLine(v011, v111, color);
+            Debug.DrawLine(v101, v100, color);
+            Debug.DrawLine(v101, v111, color);
+            Debug.DrawLine(v101, v001, color);
+            Debug.DrawLine(v110, v111, color);
+            Debug.DrawLine(v110, v100, color);
+            Debug.DrawLine(v110, v010, color);
+        }
         public static void ShowVectorInGame(Vector3 origin, Vector3 vec, float time = 1f)
         {
             if (vec.magnitude > 0.000001f)

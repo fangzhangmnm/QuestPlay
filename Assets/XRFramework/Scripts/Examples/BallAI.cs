@@ -2,11 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
+using fzmnm.BehaviorTree;
 namespace fzmnm
 {
 
     public class BallAI : MonoBehaviour
     {
+        public Animator anim;
+        public new Transform transform;
         public BoxCollider fieldBounds;
         public Transform field => fieldBounds.transform;
         public BoxCollider targetBounds;
@@ -17,6 +20,10 @@ namespace fzmnm
         public LineRenderer trajectoryRenderer;
         public BallTrajectoryPredictor predictor;
         public GameObject targetIndicator;
+        Node tree;
+        [TextArea(5, 15)]
+        public string debug_tree;
+
         private void Start()
         {
             ground = new Plane(fieldBounds.transform.up, fieldBounds.transform.TransformPoint(Vector3.up * (fieldBounds.center.y - fieldBounds.size.y / 2)));
@@ -25,41 +32,60 @@ namespace fzmnm
             predictor.groundMaterial = groundMaterial;
             predictor.racketMaterial = racketMaterial;
             predictor.obstacles = obstacles;
-            StartCoroutine(MainLoop());
-        }
-        private void OnDisable()
-        {
-            StopAllCoroutines();
-        }
-        IEnumerator MainLoop()
-        {
-            while (true)
-            {
-                Observe();
-                Decide();
-                yield return StartCoroutine(Execute());
-            }
-        }
-        bool hasDecision;
-        Vector3 startPosition, startVelocity, startAngularVelocity;
-        IEnumerator Execute()
-        {
-            targetIndicator.transform.position = startPosition;
-            if(startVelocity.magnitude>.001f)
-                targetIndicator.transform.rotation = Quaternion.LookRotation(startVelocity, Vector3.up);
 
-            if (!hasDecision) yield break;
-            yield return new WaitForSeconds(hitTime);
-
-            ball.body.velocity = startVelocity;
-            ball.body.angularVelocity = startAngularVelocity;
+            tree = new Repeater(repeatOnFail: true).Add(
+                    new Sequencer().Add(
+                        new WaitForSecondsNode(.1f),
+                        new ActionNode(IsNeedReturnAndChooseHitPosition),
+                        new ActionNode(ChooseReturnPosition),
+                        new WaitForSecondsNode(()=>timeToWait)
+                    )
+                );
+        }
+        private void FixedUpdate()
+        {
+            tree.Tick();
+            debug_tree = tree.Log();
         }
 
-        void Decide()
+
+        float timeToWait;
+        Vector3 hitPosition, hitVelocity, hitAngularVelocity;
+        Quaternion hitRotation;
+        Vector3 returnPosition, returnVelocity, returnAngularVelocity;
+        Quaternion returnRotation;
+        bool IsNeedReturnAndChooseHitPosition()
         {
-            hasDecision = false;
-            if (!needAction) return;
-            bool success = false;
+            if (field.InverseTransformPoint(ball.body.position).z < 0) return false;
+
+            predictor.Clear();
+            predictor.Set(ball.body.position, ball.body.rotation, ball.body.velocity, ball.body.angularVelocity);
+            predictor.Predict(record: true);
+
+
+            if (!predictor.isGroundHit || predictor.isObstacleHit) return false;
+            if (field.InverseTransformPoint(predictor.position).z > 0) return false;
+
+            float time1 = predictor.time;
+            predictor.CollideGround();
+            predictor.Predict(record: true);
+            float time2 = predictor.time;
+            //Debug.Log($"{time1:F2} {time2 - time1:F2}");//.5f
+
+            timeToWait = (time1 + time2) / 2;
+            int id = predictor.Query((timeToWait));
+            hitPosition = predictor.positions[id];
+            hitRotation = predictor.rotations[id];
+            hitVelocity = predictor.velocities[id];
+            hitAngularVelocity = predictor.angularVelocities[id];
+            predictor.positionCount = id + 1;
+
+            UpdateTrajectoryRenderer();
+
+            return true;
+        }
+        bool ChooseReturnPosition()
+        {
             for (int _i = 0; _i < 5; ++_i)
             {
 
@@ -75,60 +101,22 @@ namespace fzmnm
                     Random.Range(0, targetBounds.size.y / 2 + targetBounds.center.y),
                     0)).y;
 
-                startPosition = hitPosition;
-                Vector3 startAngularVelocity = Random.insideUnitSphere * 50;
+                returnPosition = hitPosition;
+                returnRotation = hitRotation;
+                returnAngularVelocity = Random.insideUnitSphere * 50;
 
 
-                if(predictor.DesignTrajectory(hitPosition, hitRotation, startAngularVelocity, end, ball.GetGravity().magnitude, maxY, out startVelocity, out float hitTime))
+                if (predictor.DesignTrajectory(hitPosition, hitRotation, returnAngularVelocity, end, ball.GetGravity().magnitude, maxY, out returnVelocity, out float hitTime))
                 {
-                    success = true;
+                    predictor.Set(returnPosition, returnRotation, returnVelocity, returnAngularVelocity);
+                    predictor.Predict();
+                    UpdateTrajectoryRenderer();
+                    return true;
                 }
-                predictor.Set(startPosition, hitRotation, startVelocity, startAngularVelocity);
-                predictor.Predict();
-                UpdateTrajectoryRenderer();
-
-
-                if (success) break;
             }
-            if (success)
-                hasDecision = true;
+            return false;
         }
-        bool needAction;
-        Vector3 hitPosition, hitVelocity, hitAngularVelocity;
-        float hitTime;
-        Quaternion hitRotation;
-        void Observe()
-        {
-            needAction = false;
-            if (field.InverseTransformPoint(ball.body.position).z > 0)
-            {
 
-                predictor.Clear();
-                predictor.Set(ball.body.position, ball.body.rotation, ball.body.velocity, ball.body.angularVelocity);
-                predictor.Predict(record: true);
-                if (predictor.isGroundHit && !predictor.isObstacleHit)
-                    if (field.InverseTransformPoint(predictor.position).z < 0)
-                    {
-                        float time1 = predictor.time;
-                        predictor.CollideGround();
-                        predictor.Predict(record: true);
-                        float time2 = predictor.time;
-                        Debug.Log($"{time1:F2} {time2 - time1:F2}");//.5f
-
-                        hitTime = (time1 + time2) / 2;
-                        int id = predictor.Query((hitTime));
-                        hitPosition = predictor.positions[id];
-                        hitRotation = predictor.rotations[id];
-                        hitVelocity = predictor.velocities[id];
-                        hitAngularVelocity = predictor.angularVelocities[id];
-                        needAction = true;
-                        predictor.positionCount = id+1;
-
-                        UpdateTrajectoryRenderer();
-                    }
-            }
-
-        }
         void UpdateTrajectoryRenderer()
         {
 
