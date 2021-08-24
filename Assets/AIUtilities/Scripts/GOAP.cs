@@ -134,6 +134,7 @@ namespace fzmnm.GOAP
         public int maxSearchSteps = 10000;
         public List<Action> path=null;
 
+
         public bool Plan(State start)
         {
             lastSearchTimer.Restart();
@@ -143,6 +144,7 @@ namespace fzmnm.GOAP
             open.Enqueue((start,0), goal.Heuristic(start,minCost));
             var gScores = new Dictionary<State, float>(new _StateComparer());
             var from = new Dictionary<State, (State, Action, float)>(new _StateComparer());
+            
             lastSearchStepCount = 0;
             while (open.Count > 0)
             {
